@@ -3,14 +3,15 @@ import java.util.*;
 /* The dataset represented by a Weighted Automaton */
 public class WAutomaton
 {
-    static ArrayList<State> states;                            /* the set of states */
-    static int NbState = 0;                                            /* number of states */
+    static ArrayList<State> states;                             /* the set of states */
+    static int NbState = 0;                                     /* number of states */
     int Nbtransaction = 1;                                      /* number of transactions */
-    LinkedList<DfaState> queue = new LinkedList<>();              /* Les états de l'automate déterministe */
+    LinkedList<DfaState> queue = new LinkedList<>();            /* Les états de l'automate déterministe */
     static final int itemsetDelimiter = -1;                     /* the endmark of an itemset */
     static final int transactionDelimiter = -2;                 /* the endmark of a sequence */
     static int min_supp = 1;                                    /* the support threshold */
     int nbFreqSequences = 0;                                    /* number of frequent sequences in the dataset*/
+
     int code = 0;                                               /* start code for reachability queries */
     BufferedWriter writer ;                                     /* for output */
     BitSet fitems ;                                             /* bitset of the frequent items (the set F1) */
@@ -41,7 +42,13 @@ public class WAutomaton
         }
         return r;
     }*/
-
+    public ArrayList<State> rootSet(Set<State> P) {            // roots of a stateset
+        ArrayList<State> r = new ArrayList<State>();
+        for (State p:P) {
+            if (!r.contains(states.get(p.getRoot()))) r.add(states.get(p.getRoot()));
+        }
+        return r;
+    }
     public  String toString() {                         /* Print the automaton */
         String ch = "";
         int i = 0;
@@ -62,18 +69,15 @@ public class WAutomaton
 
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
-        State  p , q, x , y;
-        IState current_root;
+        State  p , q, x , y, sp, sq, sx, sy ;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
         Stack<State> S = new Stack<>();
-        current_root = (IState) states.get(0);
+        IState current_root = (IState) states.get(0);
         p = current_root;
         S.push(current_root);
-        State sp,sq ;
-        HashMap<Integer, Integer> alphabet = new HashMap<>();      /* l'ensemble des items dans le dataset et les support associés*/
+        HashMap<Integer, Integer> alphabet = new HashMap<>();      /* l'ensemble des items dans le dataset et les support associés */
         long debut = System.nanoTime();
         HashSet<Integer> members = new HashSet<>();
-        State sx, sy;
         String transaction;
         while ((transaction = in.readLine()) != null)
         {
@@ -83,9 +87,9 @@ public class WAutomaton
                 switch (item) {
                     case transactionDelimiter:
                         Nbtransaction++;
-                        BitSet lastAlphabet = new BitSet();
-                        BitSet currentAlphabet = new BitSet();
-                        y = S.pop(); // the last state in the current sequence
+                        BitSet lastAlphabet , currentAlphabet ;
+                        lastAlphabet = currentAlphabet = new BitSet();
+                        y = S.pop();                        // the last state in the current sequence
                         while (!S.isEmpty()) {
                             x = S.pop();
                             sx = x;
@@ -177,7 +181,7 @@ public class WAutomaton
         Iterator<State> qit = Q.iterator();
         State p = pit.next();
         State q = qit.next();
-        for (; ; ) // intresect delimiters with the result
+        for (;;) // intresect delimiters with the result
         {
             int z = q.compareTo(p);
             if (z < 0) {
@@ -252,7 +256,7 @@ public class WAutomaton
         return r;
     }
 
-    public  DfaState delta_i(DfaState P,  int a) {   // delta from a stateset itemset delimiter
+    public  DfaState delta_i(DfaState P,  int a) {   // delta from a stateset itemset-delimiter
         DfaState r = new DfaState();
         for (State p : P.getEtats()) {
             if (((IState) p).getFollow().get(a)) {
@@ -271,12 +275,12 @@ public class WAutomaton
        DfaState r = new DfaState();
        if (E.getEtats().isEmpty() || w.size() == 0) return r;
        else if (w.size() == 1) {
-           //================ delta from itemsetdelimiters ====================
+                    //================ delta from itemsetdelimiters ====================
            if (E.getPattern().size() == 0 || E.getPattern().get(E.getPattern().size()-1) == itemsetDelimiter)  // compute delta(P,a) = Q  from the Maps of the states p of P which are itemsetdelimiters
                 r = delta_i(E,w.get(0));
            else     //================ delta inside itemsets  =====
                 r = delta_s(E,w.get(0));
-           //===============  difference between delimiters and result: the next itemsets to begin with but from the start of the last itemset
+                //===============  difference between delimiters and result: the next itemsets to begin with but from the start of the last itemset
            if (!r.getRest().isEmpty()) {
                DfaState t = new DfaState();
                for (State e:r.getRest())

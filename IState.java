@@ -1,10 +1,12 @@
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.TreeSet;
+//import java.util.TreeSet;
 
 public class IState extends State  implements Comparable<State> {
-    public HashMap<Integer, TreeSet<State>> itransitions;     /* List of the set of the first non-immediate transitions by item */
-    public BitSet follow;                                         /* The set of items reachable from the state */
+    public HashMap<Integer, Set<State>> itransitions;            /* List of the set of the first non-immediate transitions by item */
+    public BitSet follow;                                        /* The set of items reachable from the state */
     public IState () {
         type = true;
         itransitions = new HashMap<>();
@@ -20,14 +22,14 @@ public class IState extends State  implements Comparable<State> {
         follow.or(s);
     }
 
-    public HashMap<Integer, TreeSet<State>> getItransitions() {
+    public HashMap<Integer, Set<State>> getItransitions() {
         return itransitions;
     }
 
     public void additransition(int item, State etat) {
         if (itransitions == null) {
             this.itransitions = new HashMap<>();
-            TreeSet<State> ss = new TreeSet<>();
+            Set<State> ss = new TreeSet<>();
             ss.add(etat);
             this.itransitions.put(item,ss);
         }
