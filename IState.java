@@ -6,7 +6,7 @@ import java.util.TreeSet;
 
 public class IState extends State  implements Comparable<State> {
     public HashMap<Integer, Set<State>> itransitions;            /* List of the set of the first non-immediate transitions by item */
-    public BitSet follow;                                        /* The set of items reachable from the state */
+    //public BitSet follow;                                        /* The set of items reachable from the state */
     public IState () {
         type = true;
         itransitions = new HashMap<>();

@@ -2,11 +2,12 @@ import java.util.*;
 /* Weighted Automaton State Class */
     public class State implements Comparable<State> {
     boolean type;                                         /* flag : the state is an itemset delimiter */
+    BitSet follow;                                        /* les items suivants */
     final HashMap<Integer,State> transitions;             /* Immediate transition list */
     private int weight;                                   /* output weight of the state */
-    int start, end, root;                                       /* codes for reachability queries and the begining of the itemset that contains this state (root)*/
+    int start, end;                                       /* codes for reachability (descendence) queries */
    // static int code = 0;
-
+    State root;                /* the begining of the itemset that contains this state (root)*/
     public State() {
         type = false;
         transitions = new HashMap<>();
@@ -15,6 +16,15 @@ import java.util.*;
     }
 
     public boolean getType(){ return type;}
+    public BitSet getFollow()
+    {
+        return follow;
+    }
+
+    public void setFollow(BitSet s)
+    {
+        follow.or(s);
+    }
     protected Map<Integer, State > getTransitions() {
         return transitions;
     }
@@ -31,15 +41,15 @@ import java.util.*;
         return end;
     }
 
-    public int getRoot() {
+    public State getRoot() {
         return root;
     }
-    public void setRoot(int r)
+    public void setRoot(State r)
     {
         this.root = r;
     }
 
-    public  void addTransition(int item, State                                                                                                                                       dest) {
+    public  void addTransition(int item, State dest) {
         transitions.put(item,dest);
     }
 

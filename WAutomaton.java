@@ -45,7 +45,7 @@ public class WAutomaton
     public ArrayList<State> rootSet(Set<State> P) {            // roots of a stateset
         ArrayList<State> r = new ArrayList<State>();
         for (State p:P) {
-            if (!r.contains(states.get(p.getRoot()))) r.add(states.get(p.getRoot()));
+            if (!r.contains(p.getRoot())) r.add(p.getRoot());
         }
         return r;
     }
@@ -59,7 +59,7 @@ public class WAutomaton
         return ch;
     }
 
-    public void codage (State s) {          // each state has a double integer code (start & end) used for reachability or descendance relation
+    public void codage (State s) {      // each state has a double integer code (start & end) used for reachability or descendance relation
         State p = s;
         p.setStart(code++);
         for (State q  : p.getTransitions().values())
@@ -131,9 +131,9 @@ public class WAutomaton
                             q = new IState();
                             states.add(q);
                             sp.addTransition(item, q);
+                            q.setRoot(current_root);
                         }
-                        sq = q;
-                        sq.setWeight(sq.getWeight() + 1);
+                        q.setWeight(q.getWeight() + 1);
                         S.push(q);
                         p = q;
                         IState ro = current_root;
@@ -152,6 +152,7 @@ public class WAutomaton
                             sp.addTransition(item, q);
                             ro = current_root;
                             if (!sp.getType()) ro.additransition(item, q);
+                            q.setRoot(current_root);
                         }
                         sq = q;
                         sq.setWeight(sq.getWeight() + 1);
@@ -359,11 +360,13 @@ public class WAutomaton
 
     public static void main(String[] args) throws IOException {
         WAutomaton automate = new WAutomaton(Integer.parseInt(args[0]));    // min support
-        automate.writer = new BufferedWriter( new FileWriter(args[2]));     // output file
         automate.loadData(args[1]);                                         // input file
+        automate.writer = new BufferedWriter( new FileWriter(args[2]));     // output file
+
         long beforeUsedMem=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         long time = System.nanoTime();
         automate.codage(states.get(0));
+        System.out.println(automate);
         automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
