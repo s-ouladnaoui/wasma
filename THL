@@ -1,0 +1,60 @@
+<p><img alt="" src="http://www.discmath.ulg.ac.be/flans/cover.jpg" style="height:200px; width:300px" />
+
+    &nbsp;&nbsp;<span style="font-size:16px">Bienvenue sur la page du cours de Théorie des langages.</span></p>
+    
+    <p><span style="font-size:16px">L&#39;objectif est d&#39;&eacute;tudier les outils fondamentaux permettant de définir formellement des langages (génération et vérification)) et de cerner leurs propriétés. Ce cours couvre les grammaires, les automates finis, les expressions régulières ainsi que la machine de Tunring. </span></p><br>
+    Vous avez des questions, vous pouvez m'envoyer <a href="mailto:s.ouladnaoui@gmail.com">un mail</a>.
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    <ul>
+    <li><span style="font-size:20px"><strong>Cours</strong></span>
+    <ol>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Présentation de la matière&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1xAa0U4k5yLbaZ0IUbEcvHXMT9UtrRUFQ/view?usp=share_link">Slides_Intro</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Préliminiares &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1K-YuulBsBwcfcG7X-QmTlMmjGA5Ai3xw/view?usp=share_link">Rappel_Math</a></strong></span></span></li>
+        <li><span style="color:#e74c3c"><span style="font-size:20px"><strong>Rappel du langage C&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp;<a href="https://www.rocq.inria.fr/secret/Anne.Canteaut/COURS_C/chapitre1.html">Rappel_C</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Alphabet, mots et langages&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1StbvxAhtL2j0sJVBfNOe4gprOaSh2-m7/view?usp=share_link">Alphabet_Mots</a> <a href="https://drive.google.com/file/d/1uDsFaVcbi-lyb-a7LhPlLHwIDXELHqf7/view?usp=share_link"> Langages</a></strong></span></span></li>
+        <li><span style="color:#e74c3c"><span style="font-size:20px"><strong>Grammaires&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<a href="https://drive.google.com/file/d/15zs9ulUpCbCeu3AMFtr6kzlNu27x20lY/view?usp=sharing">Rappel_THL</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Automates finis&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<a href="https://drive.google.com/file/d/128t8j_GynSrRbqAzvLULCHDZKssUNqqi/view?usp=sharing">A.Lex</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Expressions Régulières&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<a href="https://drive.google.com/file/d/1jkyVuI4aDAo1NrrwDYcyVXMlmSSdBZne/view?usp=sharing">A.Synt.desc</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Minimisation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;<a href="https://drive.google.com/file/d/1OT0Irwsa0068c9hP0fLvx_VcC35HoP83/view">Bibliographie</a></strong></span></span></li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>Propriétés de fermeture des LR  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;<a href="https://drive.google.com/file/d/1OT0Irwsa0068c9hP0fLvx_VcC35HoP83/view">Bibliographie</a></strong></span></span></li>
+    </ol>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    <li><span style="font-size:20px"><strong>TD/TP</strong></span>
+    <ol>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>TDs&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1y0JPmo0ttlonWbUuWkknZNQwCDady79G/view?usp=sharing">TD_1</a></span>
+    
+    &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1X9XVsNdpRLbgg9C9UyWrosvP-t5oknoE/view?usp=sharing">TD_2</a> 
+    
+    &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1IZ4Nm5py-4KkBURG9bh9yZ1NUTVXlS7d/view?usp=share_link">TD_3</a> 
+    
+    </strong></span></span>
+    </li>
+        <li><span style="font-size:20px"><span style="color:#e74c3c"><strong>TPs s&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href="https://drive.google.com/file/d/1Iwz7tv1KLHjl3v6iR9FdWdSzEkrYOSUj/view?usp=share_link"> TP_1 </a>  &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1h2TtUktfJDR4G_v6TDQryr_DQwKvlEI2/view?usp=share_link"> lexer </a> &nbsp; &nbsp; &nbsp;<a href="https://drive.google.com/file/d/1ku8FA6lrA7923XsoBnSErA0qJFJ1TmDH/view?usp=share_link"> parser </a>
+    <ul>
+    <li> Télécharger d'abord VirualBox à partir d'<a href="https://www.virtualbox.org/">ici<a/></li>
+    <li> Puis l'environnement <a href="https://drive.google.com/file/d/1FtbASj2nnLClHBX6R_Dxu_s20EdtbiAA/view?usp=sharing">COMPIL</a></li>
+    <li>Ainsi que le fichier de <a href="https://drive.google.com/file/d/1jjfrd-5AMfWtBYBT--1SCQNMIe6H7Kk6/view?usp=sharing" download>test</a>
+    <li> Un rappel des principales commandes du terminal Linux est disponible dans : <a href="https://drive.google.com/file/d/1OWELieUdVHYyQxl9NcNDBTOnJpJbeB1o/view?usp=sharing"> <strong>LINUX_COMMANDES</strong></a></li>
+    <li> La référence sur les outils <a href="https://drive.google.com/file/d/1LLB15EQGvJ6gcF9sn2aUJWMHlk0iLAkn/view?usp=sharing">flex/bison</a></li>
+    </ul>
+    
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    <li><span style="font-size:20px"><strong>Examens</strong>
+    </span></li>
+    <table>
+      <tr>
+        <th>Énoncés</th>
+        <th>Corrigés</th>
+        <th>Évaluation</th>
+      </tr>
+      <tr>
+        <td><a href="https://drive.google.com/file/d/1H7CGll-1JNSroFbmmkjF9LYYL6O-eEgZ/view?usp=share_link">TD_202212</a></td>
+        <td><a href="https://drive.google.com/file/d/18lYfKV7ky5YJhX9YpdNOtz5GUobtf0Ai/view?usp=share_link">TD_202212_corr</a></td>
+      </tr>
+      <tr>
+    <td><a href="https://drive.google.com/file/d/1aTxSOHRtFMqjvJeoKXcKT-x5WPjq0HUJ/view?usp=share_link">Final_202301</a></td>
+        <td><a href="https://drive.google.com/file/d/1vu1Eh3iXtf5XwzB7H0w2UVq0ip4U-0y0/view?usp=share_link">Final_202301_corr</a></td>
+    <td><a href="https://drive.google.com/file/d/1recz56cIBKSawlMLOu4NEOxadDZgjQ9d/view?usp=share_link"> Résultats </a></td>
+      </tr>
+    </table>
+    </ul>

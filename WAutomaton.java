@@ -4,21 +4,22 @@ import java.util.*;
 public class WAutomaton
 {
     static ArrayList<State> states;                             /* the set of states */
+    static State startState = null;
     static int NbState = 0;                                     /* number of states */
     int Nbtransaction = 1;                                      /* number of transactions */
-    LinkedList<DfaState> queue = new LinkedList<>();            /* Les états de l'automate déterministe */
+    ArrayList<DfaState> queue = new ArrayList<>();            /* Les états de l'automate déterministe */
+    static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;                     /* the endmark of an itemset */
     static final int transactionDelimiter = -2;                 /* the endmark of a sequence */
     static int min_supp = 1;                                    /* the support threshold */
     int nbFreqSequences = 0;                                    /* number of frequent sequences in the dataset*/
-
     int code = 0;                                               /* start code for reachability queries */
     BufferedWriter writer ;                                     /* for output */
     BitSet fitems ;                                             /* bitset of the frequent items (the set F1) */
 
     public WAutomaton (int ms) {
-        states = new ArrayList<>();
-        states.add(new IState());
+        states = new ArrayList<>();            
+        states.add(startState = new IState());           // the initial state (root) of the weighted automaton
         min_supp = ms;
         fitems = new BitSet();
     }
@@ -42,8 +43,8 @@ public class WAutomaton
         }
         return r;
     }*/
-    public ArrayList<State> rootSet(Set<State> P) {            // roots of a stateset
-        ArrayList<State> r = new ArrayList<State>();
+    public Set<State> rootSet(Set<State> P) {            // dustinct/unique roots of a stateset
+        TreeSet<State> r = new TreeSet<State>();
         for (State p:P) {
             if (!r.contains(p.getRoot())) r.add(p.getRoot());
         }
@@ -59,7 +60,7 @@ public class WAutomaton
         return ch;
     }
 
-    public void codage (State s) {      // each state has a double integer code (start & end) used for reachability or descendance relation
+    public void codage (State s) {      // each state has a double integer code (start & end) used for reachability/descendance relation check
         State p = s;
         p.setStart(code++);
         for (State q  : p.getTransitions().values())
@@ -69,40 +70,39 @@ public class WAutomaton
 
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
-        State  p , q, x , y, sp, sq, sx, sy ;
+        State  p , q, x , y;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
-        Stack<State> S = new Stack<>();
-        IState current_root = (IState) states.get(0);
+        Stack<State> S = new Stack<>();            // to track the follow items (as a bitsets)
+        IState current_root = (IState)startState;
         p = current_root;
         S.push(current_root);
-        HashMap<Integer, Integer> alphabet = new HashMap<>();      /* l'ensemble des items dans le dataset et les support associés */
-        long debut = System.nanoTime();
+        HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The set of items in the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
         String transaction;
+        long debut = System.nanoTime();
         while ((transaction = in.readLine()) != null)
         {
-            String[] items = transaction.split(" ");
+            String[] items = transaction.split(itemSeparator);
             for (String ch : items) {
                 int item = Integer.parseInt(ch);
                 switch (item) {
                     case transactionDelimiter:
                         Nbtransaction++;
-                        BitSet lastAlphabet , currentAlphabet ;
+                        BitSet lastAlphabet,currentAlphabet;
                         lastAlphabet = currentAlphabet = new BitSet();
                         y = S.pop();                        // the last state in the current sequence
                         while (!S.isEmpty()) {
                             x = S.pop();
-                            sx = x;
-                            sy = y;
-                            for (int k:sy.getTransitions().keySet()) {
+                           
+                            for (int k : y.getTransitions().keySet()) {
                                 if (k >= 0) currentAlphabet.set(k);
                             }
-                            for (int k:sx.getTransitions().keySet()) {
+                            for (int k : x.getTransitions().keySet()) {
                                 if (k >= 0) currentAlphabet.set(k);
                             }
-                            if (sx.getType()) {
+                            if (x.getType()) {
                                 lastAlphabet.or(currentAlphabet);
-                                ((IState) sx).setFollow(lastAlphabet);
+                                ((IState) x).setFollow(lastAlphabet);
                                 currentAlphabet.clear();
                             }
                             y = x;
@@ -114,48 +114,43 @@ public class WAutomaton
                                 alphabet.put(k, 1);
                             } else {
                                 alphabet.put(k, f + 1);
-                                tmp = f+1;
+                                tmp = f + 1;
                                 if (!fitems.get(k) && tmp >= min_supp) fitems.set(k);
                             }
                         }
-                        p = current_root = (IState) states.get(0);
+                        p = current_root = (IState) startState;
                         S.push(p);
                         members.clear();
                         break;
-                    case itemsetDelimiter:
-                        sp = p;
-                        if (sp.getTransitions().containsKey(item)) {
-                            q = sp.getTransitions().get(item);
+                    case itemsetDelimiter :
+                        if (p.getTransitions().containsKey(item)) {
+                            q = p.getTransitions().get(item);
                         } else {
                             ++NbState;
                             q = new IState();
                             states.add(q);
-                            sp.addTransition(item, q);
+                            p.addTransition(item, q);
                             q.setRoot(current_root);
                         }
                         q.setWeight(q.getWeight() + 1);
                         S.push(q);
                         p = q;
-                        IState ro = current_root;
-                        ro.additransition(item, q);
+                        current_root.additransition(item, q);
                         current_root = (IState) q;
                         break;
                     default:
-                        members.add(item);                 // add item to the alphabet
-                        sp = p;
-                        if (sp.getTransitions().containsKey(item)) {
-                            q = sp.getTransitions().get(item);
+                        members.add(item);          // add the item to the alphabet
+                        if (p.getTransitions().containsKey(item)) {
+                            q = p.getTransitions().get(item);
                         } else {
                             ++NbState;
-                            q = new State();
+                            q = new State(false);
                             states.add(q);
-                            sp.addTransition(item, q);
-                            ro = current_root;
-                            if (!sp.getType()) ro.additransition(item, q);
+                            p.addTransition(item, q);
+                            if (!p.getType()) current_root.additransition(item, q);
                             q.setRoot(current_root);
                         }
-                        sq = q;
-                        sq.setWeight(sq.getWeight() + 1);
+                        q.setWeight(q.getWeight() + 1);
                         S.push(q);
                         p = q;
                 }
@@ -163,28 +158,21 @@ public class WAutomaton
         }
         in.close();
         long fin = System.nanoTime();
-        writer.write("Database: "+inputfile+"; Alphabet size: "+alphabet.size()+"; Database size: "+(Nbtransaction-1)+"\n");
-        writer.write("Loading time: "+(fin-debut)/1000000+" ms\n");
-        System.out.println("Database: "+inputfile+"; Alphabet size: "+alphabet.size()+"; Database size: "+(Nbtransaction-1));
-        System.out.println("Loading time: "+(fin-debut)/1000000+" ms");
+        writer.write("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + (Nbtransaction-1) + "\n");
+        writer.write("Loading time: " + (fin-debut)/1000000 + " ms\n");
+        System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + (Nbtransaction-1));
+        System.out.println("Loading time: " + (fin-debut)/1000000 + " ms");
     }
 
-    public DfaState Aligner(DfaState r) {
-        Set<State> P = new TreeSet<State>();
-        for(State e:r.getEtats()){
-            P.add(e);
-        }
-        Set<State> Q = new TreeSet<State>();
-        for(State e:r.getDelimiters()){
-            Q.add(e);
-        }
+    public Set<State> Aligner(Set<State> P, Set<State> Q) {
+        Set<State> r = new TreeSet<State>();
         Iterator<State> pit = P.iterator();
         Iterator<State> qit = Q.iterator();
         State p = pit.next();
         State q = qit.next();
         for (;;) // intresect delimiters with the result
         {
-            int z = q.compareTo(p);
+            int z = p.compareTo(q);
             if (z < 0) {
                 r.getDelimiters().remove(q);
                 r.getRest().add(q);
@@ -196,7 +184,7 @@ public class WAutomaton
             } else {
                 if (pit.hasNext()) p = pit.next();
                 else {
-                    for (; ; ) // continue with the rest of the delimiters if it is non-empty
+                    for (;;) // continue with the rest of the delimiters if it is non-empty
                     {
                         r.getDelimiters().remove(q);
                         r.getRest().add(q);
@@ -231,7 +219,7 @@ public class WAutomaton
     public DfaState delta_s(DfaState P, int a) { // delta from internal stateset by an item a
         DfaState r = new DfaState();
         r.setDelimiters(P.getDelimiters());
-        for (State p: P.getEtats()) {
+        for (State p : P.getEtats()) {
             DState z = delta_s(p,a);
             if (!z.getEtats().isEmpty()) {
                 r.setEtats(z.getEtats());
@@ -272,9 +260,26 @@ public class WAutomaton
         return Aligner(r);
     }
 
-    public DfaState delta(DfaState E, List<Integer> w) {
+    public DfaState delta(DfaState E, int a) {
        DfaState r = new DfaState();
-       if (E.getEtats().isEmpty() || w.size() == 0) return r;
+       if (E.getEtats().first().getType()){  //==== delta from itemsetdelimiters (sequence extension) =====
+        for (State e:E.getEtats()){ 
+            r.getEtats().addAll(((IState) e).Delta(a,true).getEtats());}
+        }
+        else { //==== delta  inside the itemsets ====
+        Set<State> Q = new TreeSet<State>(); 
+        for (State p : rootSet(E.getEtats())) 
+           Q.addAll(((IState)p).Delta(a,true).getEtats());
+        r.getEtats().addAll(Aligner(E.getEtats(), Q));
+        }
+        return r;
+    }
+    
+
+
+
+
+       /*if (E.getEtats().isEmpty() || w.size() == 0) return r;
        else if (w.size() == 1) {
                     //================ delta from itemsetdelimiters ====================
            if (E.getPattern().size() == 0 || E.getPattern().get(E.getPattern().size()-1) == itemsetDelimiter)  // compute delta(P,a) = Q  from the Maps of the states p of P which are itemsetdelimiters
@@ -284,7 +289,7 @@ public class WAutomaton
                 //===============  difference between delimiters and result: the next itemsets to begin with but from the start of the last itemset
            if (!r.getRest().isEmpty()) {
                DfaState t = new DfaState();
-               for (State e:r.getRest())
+               for (State e : r.getRest())
                    if (!(((IState)e).getFollow().isEmpty())) {
                        t.getEtats().add(e);
                        t.setFollow(((IState)e).getFollow());
@@ -314,8 +319,7 @@ public class WAutomaton
            r.setPattern(E.getPattern());
            r.extendPattern(w.get(0));
        }
-       return r;
-    }
+       return r;*/
 
     public void extendState(DfaState s,  int i) {
         ArrayList<Integer> motif = new ArrayList<>();
@@ -325,15 +329,15 @@ public class WAutomaton
         ns.getFollow().clear(i);
         if (ns.getSupport() >= min_supp) {
             DfaState ds = new DfaState();  // ds : delimiter state = delta (ns, itemsetdelimiter)
-            for (State p:ns.getDelimiters()) {
+            for (State p : ns.getDelimiters()) {
                 if (!((IState)p).getFollow().isEmpty()) ds.getEtats().add(p);
                 ds.setFollow(((IState)p).getFollow());
             }
             ds.setSupport(ns.getSupport());
             ds.setPattern(ns.getPattern());
             ds.extendPattern(itemsetDelimiter);
-            queue.addFirst(ns);
-            queue.addLast(ds);
+            queue.add(ns);
+            queue.add(ds);
             nbFreqSequences++;
             System.out.println(ds);
             try {
@@ -347,32 +351,33 @@ public class WAutomaton
 
     public void Determinize() {
         DfaState s = new DfaState();
-        s.etats.add(states.get(0));
-        s.setFollow(((IState) states.get(0)).getFollow());
+        s.etats.add(startState);
+        s.setFollow(((IState) startState).getFollow());
         queue.add(s);
         while (!queue.isEmpty()) {
-            s = queue.remove();
+            s = queue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                if (fitems.get(i)) extendState(s,i);
+                if (fitems.get(i)) {
+                    extendState(s,i); 
+                }
             }
         }
     }
 
     public static void main(String[] args) throws IOException {
         WAutomaton automate = new WAutomaton(Integer.parseInt(args[0]));    // min support
-        automate.loadData(args[1]);                                         // input file
         automate.writer = new BufferedWriter( new FileWriter(args[2]));     // output file
-
-        long beforeUsedMem=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+        automate.loadData(args[1]);                                         // input file
+        long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long time = System.nanoTime();
-        automate.codage(states.get(0));
-        System.out.println(automate);
+        automate.codage(startState);
+        //System.out.println(automate);
         automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
         String tim = String.format("%.2f ms",(System.nanoTime()-time)/1000000d);
-        automate.writer.write("Min supp: "+min_supp+"\nNb Frequent Sequences: "+automate.nbFreqSequences+"\nMining time: " + tim + "\nMemory requirement: " + mem);
-        System.out.println("Min supp: "+min_supp+"\nNb Frequent Sequences: "+automate.nbFreqSequences+"\nMining time: " + tim + "\nMemory requirement: " + mem);
+        automate.writer.write("Min supp: " + min_supp + "\nNb Frequent Sequences : " + automate.nbFreqSequences + "\nMining time: " + tim + "\nMemory requirement: " + mem);
+        System.out.println("Min supp: " + min_supp + "\nNb Frequent Sequences: " + automate.nbFreqSequences + "\nMining time: " + tim + "\nMemory requirement: " + mem);
         automate.writer.close();
     }
 }

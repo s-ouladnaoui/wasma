@@ -3,13 +3,13 @@ import java.util.TreeSet;
 
 public class DState {
     TreeSet<State> etats;
-    int support;
+    int support;                                                                                                                                                                                                                      
 
     public DState() {
         etats = new TreeSet<>();
     }
 
-    public Set<State> getEtats() {
+    public TreeSet<State> getEtats() {
         return etats;
     }
     
