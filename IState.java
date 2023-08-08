@@ -1,41 +1,53 @@
-//import java.util.BitSet;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
-//import java.util.TreeSet;
 public class IState extends State {
-    public Set<State> delimiters;            /* List of the first non-immediate transitions by item */
-    //public BitSet follow;                  /* The set of items reachable from the state */
+    public HashMap<Integer,Set<State>> nextMap;            /* List of the first non-immediate transitions by item */
+    public BitSet previousMap;                  /* The set of items that can reach this state */
+    public int weight = 1;
+
     public IState () {
         super(true);
-        delimiters = new TreeSet<State>();
-      //  follow = new BitSet();
+        nextMap = new HashMap<>();
+        previousMap = new BitSet();
     }
-    /*public BitSet getFollow()
-    {
-        return follow;
-    }
-
-    public void setFollow(BitSet s)
-    {
-        follow.or(s);
-    }*/
-
-    public Set<State> getItransitions() {
-        return delimiters;
+    
+    public int getWeight(){
+        return weight;
     }
 
-    public DState Delta(int a, boolean compute){
+    public void setWeight(int w){
+        weight = w;
+    }
+    
+    public BitSet getpreviousMap(){
+        return previousMap;
+    }
+
+    public void setpreviousMap(BitSet s){
+        previousMap.or(s);
+    }
+
+    public HashMap<Integer,Set<State>> getItransitions(){
+        return nextMap;
+    }
+
+    public DState Delta(int a){
         DState r = new DState();
-        
+        r.getEtats().addAll(nextMap.get(a));
         return r;
     }
 
-    public void adddelimiter(State etat) {
-        this.delimiters.add(etat);
+    public void addItem(int i, State etat) {
+        Set<State> ss = new TreeSet<State>();
+        if (nextMap.containsKey(i)) ss = nextMap.get(i); 
+        ss.add(etat);
+        this.nextMap.put(i,ss);
     }
 
     public String toString() {
-        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight()+"; follow: ="+getFollow() +
-        " trans: "+transitions+" Map: "+delimiters+")" ;
+        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight() +
+        " trans: "+transitions+" Map: "+nextMap+" Previous: "+previousMap+" )" ;
     }
 }

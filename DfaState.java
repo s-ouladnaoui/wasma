@@ -2,51 +2,55 @@ import java.util.*;
 /* a State of the Deterministic equivalent of our WA.
  It contains a set of states, a pattern and the associated support */
 public class DfaState  extends DState {
-    List<Integer> pattern;
+   // int List<Integer> pattern;
+    int item;
     public HashMap<Integer, DfaState> Transitions;
-    TreeSet<State> delimiters;
-    TreeSet<State> rest;
-    BitSet follow;       // to predict the next items
+    //TreeSet<State> delimiters;
+    //TreeSet<State> rest;
+    //BitSet follow;       // to predict the next items
 
-    public DfaState() {
+    public DfaState(int i) {
         super();
-        pattern = new ArrayList<Integer>();
-        delimiters = new TreeSet<State>();
-        rest = new TreeSet<>();
-        follow = new BitSet();
+        item = i;
+      //  pattern = new ArrayList<Integer>();
+       // delimiters = new TreeSet<State>();
+       // rest = new TreeSet<>();
+      //  follow = new BitSet();
     }
 
-    public Set<State> getRest() {
+    /*public Set<State> getRest(){
         return rest;
     }
 
-    public TreeSet<State> getDelimiters() {
+    public TreeSet<State> getDelimiters(){
         return delimiters;
     }
 
-    public void setDelimiters(Set<State> p) {
+    public void setDelimiters(Set<State> p){
          delimiters.addAll(p);
     }
 
-    public List<Integer> getPattern() {
+    public List<Integer> getPattern(){
         return pattern;
     }
 
-    public void extendPattern(int item)
-    {
+    public void extendPattern(int item){
         pattern.add(item);
     }
 
-    public void setPattern(List<Integer> p)
-    {
+    public void setPattern(List<Integer> p){
         pattern.addAll(p);
     }
 
-    public BitSet getFollow() { return follow;}
+    public BitSet getFollow(){ 
+        return follow;
+    }
 
-    public void setFollow(BitSet b) { follow.or(b);}
+    public void setFollow(BitSet b){ 
+        follow.or(b);
+    }*/
 
-    public String toString() {
-        return getPattern()+" : "+getSupport()+"\n";
+    public String toString(){
+        return item+" : "+getSupport()+"\n";
     }
 }

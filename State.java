@@ -1,30 +1,18 @@
 import java.util.*;
 /* Weighted Automaton State Class */
-    public class State implements Comparable<State> {
+    public class State implements Comparable<State>{
     boolean type;                                         /* flag : the state is an itemset delimiter */
-    BitSet follow;                                        /* les items suivants */
     final HashMap<Integer,State> transitions;             /* Immediate transition list */
-    private int weight;                                   /* output weight of the state */
     int start, end;                                       /* codes for reachability (descendence) queries */
-   // static int code = 0;
-    State root;                /* the begining of the itemset that contains this state (root)*/
+    State root;                /* the root of the subtree: the begining of the itemset that contains this state (root) */
     public State(boolean stateType) {
         type = stateType;
         transitions = new HashMap<>();
-        follow = new BitSet();
-        //start = code++;
-       // end = code++;
     }
 
     public boolean getType() { return type;}
-
-    public BitSet getFollow() { return follow;}
-
-    public void setFollow(BitSet s) { follow.or(s); }
-    
+  
     protected Map<Integer, State > getTransitions() { return transitions; }
-
-    public int getWeight() { return weight; }
 
     public int getStart() { return start; }
 
@@ -36,19 +24,19 @@ import java.util.*;
 
     public  void addTransition(int item, State dest) { transitions.put(item,dest); }
 
-    public void setWeight(int w) { weight = w; }
-
     public void setStart(int s) { start = s; }
 
     public void setEnd(int e) { end = e; }
 
     public String toString() {
-        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight()+" trans: "+transitions+")" ;
+        return " ( "+ getType()+", "+getStart()+", "+getEnd()+" )" ;
     }
 
-    public int compareTo(State t) {
-        if (this.getStart() < t.getStart()) return -1;
-        else if (this.getStart() > t.getStart()) return +1;
+    public int compareTo(State t)
+    {
+        if (this.getEnd() < t.getStart()) return -1;
+        else if (this.getStart() > t.getEnd()) return +1;
         else return 0;
     }
+    
 }

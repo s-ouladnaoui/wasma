@@ -22,6 +22,17 @@
                 "isDefault": true
             },
             "detail": "Tâche générée par le débogueur."
+        },
+        {
+            "type": "java (build)",
+            "paths": [
+                "${workspace}"
+            ],
+            "isFullBuild": true,
+            "group": "build",
+            "problemMatcher": [],
+            "label": "java (build): Build Workspace",
+            "detail": "$(tools) Build all the Java projects in workspace."
         }
     ],
     "version": "2.0.0"
