@@ -33,9 +33,9 @@ import java.util.*;
     }
 
     public int compareTo(State t)
-    {
-        if (this.getEnd() < t.getStart()) return -1;
-        else if (this.getStart() > t.getEnd()) return +1;
+    {   
+        if (this.start < t.start) return -1;
+        else if (this.start > t.start) return +1;
         else return 0;
     }
     
