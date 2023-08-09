@@ -1,56 +1,37 @@
-import java.util.*;
-/* a State of the Deterministic equivalent of our WA.
- It contains a set of states, a pattern and the associated support */
-public class DfaState  extends DState {
-   // int List<Integer> pattern;
+import java.util.HashMap;
+import java.util.TreeSet;
+
+public class DfaState {   // one state of the wdfa is a set of states of the nfa 
     int item;
-    public HashMap<Integer, DfaState> Transitions;
-    //TreeSet<State> delimiters;
-    //TreeSet<State> rest;
-    //BitSet follow;       // to predict the next items
+    HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their roots
+    HashMap<Integer,DfaState> transitions;   // the set of transitions in the dfa from this state
+    int support;                                                                                                                                                                                                                      
 
     public DfaState(int i) {
-        super();
         item = i;
-      //  pattern = new ArrayList<Integer>();
-       // delimiters = new TreeSet<State>();
-       // rest = new TreeSet<>();
-      //  follow = new BitSet();
+        states = new HashMap<>();
     }
 
-    /*public Set<State> getRest(){
-        return rest;
+    public TreeSet<State> getEtats(IState r) {
+        return states.get(r);
+    }
+    
+    public void addState(IState r, State s){
+        if (this.states.containsKey(r)) {
+            this.states.get(r).add(s);
+        } else {
+            TreeSet<State> ss = new TreeSet<State>();
+            ss.add(s);
+            states.put(r, ss);
+        }
+        
     }
 
-    public TreeSet<State> getDelimiters(){
-        return delimiters;
+    public int getSupport() {
+        return support;
     }
 
-    public void setDelimiters(Set<State> p){
-         delimiters.addAll(p);
-    }
-
-    public List<Integer> getPattern(){
-        return pattern;
-    }
-
-    public void extendPattern(int item){
-        pattern.add(item);
-    }
-
-    public void setPattern(List<Integer> p){
-        pattern.addAll(p);
-    }
-
-    public BitSet getFollow(){ 
-        return follow;
-    }
-
-    public void setFollow(BitSet b){ 
-        follow.or(b);
-    }*/
-
-    public String toString(){
-        return item+" : "+getSupport()+"\n";
+    public void setSupport(int support) {
+        this.support = support;
     }
 }

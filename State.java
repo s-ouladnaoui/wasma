@@ -4,7 +4,7 @@ import java.util.*;
     boolean type;                                         /* flag : the state is an itemset delimiter */
     final HashMap<Integer,State> transitions;             /* Immediate transition list */
     int start, end;                                       /* codes for reachability (descendence) queries */
-    State root;                /* the root of the subtree: the begining of the itemset that contains this state (root) */
+    IState root;                /* the root of the subtree: the begining of the itemset that contains this state */
     public State(boolean stateType) {
         type = stateType;
         transitions = new HashMap<>();
@@ -18,9 +18,9 @@ import java.util.*;
 
     public int getEnd() { return end; }
 
-    public State getRoot() { return root; }
+    public IState getRoot() { return root; }
  
-    public void setRoot(State r) { this.root = r; }
+    public void setRoot(IState r) { this.root = r; }
 
     public  void addTransition(int item, State dest) { transitions.put(item,dest); }
 

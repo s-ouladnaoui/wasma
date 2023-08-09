@@ -1,9 +1,11 @@
 import java.io.*;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
 /* The dataset represented by a Weighted Automaton */
 public class WAutomaton
 {
-    static ArrayList<State> states;                       /* the set of states */
+    static ArrayList<State> wnfaStates;                       /* the set of states of the weighted nfa */
+    static ArrayList<State> wdfaStates;                       /* the set of states of the weighted dfa */
     static IState startState = null;
     static int NbState = 0;                               /* number of states */
     int Nbtransaction = 1;                                /* number of transactions */
@@ -16,11 +18,11 @@ public class WAutomaton
     int code = 0;                                         /* start code for reachability queries */
     BufferedWriter writer ;                               /* for output */
     BitSet fItems ;                                       /* bitset of the frequent items (the set F1) */
-    
+    HashMap<Integer,ArrayList<State>> FrequentItems = new HashMap<>();
 
     public WAutomaton (int ms) {
-        states = new ArrayList<>();            
-        states.add(startState = new IState());           // the initial state (root) of the weighted automaton
+        wnfaStates = new ArrayList<>();            
+        wnfaStates.add(startState = new IState());           // the initial state (root) of the weighted automaton
         min_supp = ms;
         fItems = new BitSet();
     }
@@ -54,14 +56,15 @@ public class WAutomaton
     public  String toString() {                         /* Print the automaton */
         String ch = "";
         int i = 0;
-        for (Object p:states) {
+        for (Object p:wnfaStates) {
             ch = ch+i+" : "+p.toString()+"\n";
             i++;
         }
         return ch;
     }
 
-    public void codage (State s) {      // each state has a double integer code (start & end) used for reachability/descendance relation check
+    // each state has a double integer code (start & end) used for reachability check
+    public void codage (State s) {     
         State p = s;
         p.setStart(code++);
         for (State q  : p.getTransitions().values())
@@ -71,7 +74,7 @@ public class WAutomaton
 
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
-        State  p , q;
+        State  p,q;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
         //Stack<State> S = new Stack<>();            // to track the follow items (as a bitsets)
         IState current_root = startState;
@@ -110,14 +113,20 @@ public class WAutomaton
                         } else {
                             ++NbState;
                             qq = new IState();
-                            states.add(qq);
+                            wnfaStates.add(qq);
                             p.addTransition(item, qq);
                             qq.setRoot(current_root);
+                            if (FrequentItems.containsKey(item)) FrequentItems.get(item).add(qq);
+                            else {
+                                ArrayList<State> ss = new ArrayList<State>();
+                                ss.add(qq);
+                                FrequentItems.put(item, ss);
+                            }
                         }
                         qq.setWeight(qq.getWeight() + 1);
-                        qq.setpreviousMap(currentMap);
+                        qq.setpreviousLocalItems(currentMap);
                         currentMap.clear();
-                        current_root.addItem(item, qq);
+                        //current_root.addItem(item, qq);
                         current_root = qq;
                         p = qq;
                         break;
@@ -129,11 +138,18 @@ public class WAutomaton
                         } else {
                             ++NbState;
                             q = new State(false);
-                            states.add(q);
+                            wnfaStates.add(q);
                             p.addTransition(item, q);
-                            if (!p.getType()) current_root.addItem(item, q);
+                           // if (!p.getType()) current_root.addItem(item, q);
                             q.setRoot(current_root);
+                            if (FrequentItems.containsKey(item)) FrequentItems.get(item).add(q);
+                            else {
+                                ArrayList<State> ss = new ArrayList<State>();
+                                ss.add(q);
+                                FrequentItems.put(item, ss);
+                            }
                         }
+                        
                         p = q;
                 }
             }
@@ -144,9 +160,12 @@ public class WAutomaton
         writer.write("Loading time: " + (endTime-startTime)/1000000 + " ms\n");
         System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + (Nbtransaction-1));
         System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
-    }
+        // remove from the hashmap the states of infrequent items
+        for (int i = fItems.nextClearBit(0); i > 0; i = fItems.nextClearBit(i + 1)) 
+            FrequentItems.remove(i);
+    }    
 
-    public Set<State> Aligner(Set<State> P, Set<State> Q) {
+    /*public Set<State> Aligner(Set<State> P, Set<State> Q) {
         Set<State> r = new TreeSet<State>();
         Iterator<State> pit = P.iterator();
         Iterator<State> qit = Q.iterator();
@@ -261,7 +280,7 @@ public class WAutomaton
 
 
 
-       /*if (E.getEtats().isEmpty() || w.size() == 0) return r;
+       if (E.getEtats().isEmpty() || w.size() == 0) return r;
        else if (w.size() == 1) {
                     //================ delta from itemsetdelimiters ====================
            if (E.getPattern().size() == 0 || E.getPattern().get(E.getPattern().size()-1) == itemsetDelimiter)  // compute delta(P,a) = Q  from the Maps of the states p of P which are itemsetdelimiters
@@ -301,7 +320,7 @@ public class WAutomaton
            r.setPattern(E.getPattern());
            r.extendPattern(w.get(0));
        }
-       return r;*/
+       return r;
 
     public void extendState(DfaState s,  int i) {
         ArrayList<Integer> motif = new ArrayList<>();
@@ -329,7 +348,7 @@ public class WAutomaton
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public void Determinize() {
         DfaState s = new DfaState();
