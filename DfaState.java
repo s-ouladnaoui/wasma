@@ -14,6 +14,9 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
         follow = new BitSet(); 
     }
 
+    public HashMap<IState,TreeSet<State>> getStates() {
+        return states;
+    }
     public TreeSet<State> getStates(IState r) {
         return states.get(r);
     }
@@ -54,7 +57,7 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
     }
 
     public String toString(){
-        return ("States: "+states); 
+        return ("States: "+getStates()); 
     }
 
 }
