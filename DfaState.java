@@ -1,18 +1,20 @@
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.TreeSet;
 
 public class DfaState {   // one state of the wdfa is a set of states of the nfa 
-    int item;
     HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their roots
     HashMap<Integer,DfaState> transitions;   // the set of transitions in the dfa from this state
+    BitSet follow;
     int support;                                                                                                                                                                                                                      
 
-    public DfaState(int i) {
-        item = i;
-        states = new HashMap<>();
+    public DfaState() {
+        states = new HashMap<IState,TreeSet<State>>();
+        transitions = new HashMap<Integer,DfaState>();
+        follow = new BitSet(); 
     }
 
-    public TreeSet<State> getEtats(IState r) {
+    public TreeSet<State> getStates(IState r) {
         return states.get(r);
     }
     
@@ -31,7 +33,28 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
         return support;
     }
 
-    public void setSupport(int support) {
-        this.support = support;
+    public void setSupport(int sprt) {
+        this.support = sprt;
     }
+
+    public BitSet getfollow(){
+        return follow;
+    }
+
+    public void setfollow(BitSet b){
+        follow.or(b);
+    }
+    
+    public HashMap<Integer,DfaState> gettransitions(){
+        return transitions;
+    }
+
+    public void addTransition(int i, DfaState d){
+        transitions.put(i, d);
+    }
+
+    public String toString(){
+        return ("States: "+states); 
+    }
+
 }

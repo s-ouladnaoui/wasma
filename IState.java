@@ -1,12 +1,13 @@
 import java.util.BitSet;
 public class IState extends State {
-    public BitSet previousLocalItems, nextGlobalItems;                 /* The set of items that can reach this state */
+
+    public BitSet prior, follow;                 /* The set of local previous and global next items */
     public int weight = 1;
 
     public IState () {
         super(true);
-        previousLocalItems = new BitSet(); 
-        nextGlobalItems = new BitSet();
+        prior = new BitSet(); 
+        follow = new BitSet();
     }
     
     public int getWeight(){
@@ -17,24 +18,25 @@ public class IState extends State {
         weight = w;
     }
     
-    public BitSet getpreviousLocalItems(){
-        return previousLocalItems;
+    public BitSet getprior(){
+        return prior;
     }
 
-    public void setpreviousLocalItems(BitSet s){
-        previousLocalItems.or(s);
+    public void setprior(BitSet s){
+        prior.or(s);
     }
 
-    public BitSet getnextGlobalItems(){
-        return nextGlobalItems;
+    public BitSet getfollow(){
+        return follow;
     }
 
-    public void setnextGlobalItems(BitSet b){
-        nextGlobalItems.or(b);
+    public void setfollow(BitSet b){
+        follow.or(b);
     }
 
     public String toString() {
-        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight() +
-        " nextGolbalItems: "+nextGlobalItems+" PreviousLocalItems: "+previousLocalItems+" )" ;
+        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight() //+
+        //" follow: "+follow+" prior: "+prior
+        +" )" ;
     }
 }
