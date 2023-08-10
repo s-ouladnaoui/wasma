@@ -25,8 +25,16 @@ public class IState extends State {
         previousLocalItems.or(s);
     }
 
+    public BitSet getnextGlobalItems(){
+        return nextGlobalItems;
+    }
+
+    public void setnextGlobalItems(BitSet b){
+        nextGlobalItems.or(b);
+    }
+
     public String toString() {
         return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight() +
-        " nextItems: "+nextGlobalItems+" Previous: "+previousLocalItems+" )" ;
+        " nextGolbalItems: "+nextGlobalItems+" PreviousLocalItems: "+previousLocalItems+" )" ;
     }
 }

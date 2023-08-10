@@ -76,7 +76,8 @@ public class WAutomaton
     public void loadData(String inputfile) throws IOException {
         State  p,q;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
-        //Stack<State> S = new Stack<>();            // to track the follow items (as a bitsets)
+        Stack<IState> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
+        StateStack.push(startState);
         IState current_root = startState;
         p = current_root;
         HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The set of items in the dataset and the associated supports */
@@ -92,6 +93,13 @@ public class WAutomaton
                 switch (item) {
                     case transactionDelimiter:
                         Nbtransaction++;
+                        IState ss1 = StateStack.pop();
+                        while (!StateStack.isEmpty()){
+                            IState ss2 = StateStack.pop();
+                            ss2.setnextGlobalItems(ss1.getnextGlobalItems());
+                            ss2.setnextGlobalItems(ss1.getpreviousLocalItems());
+                            ss1 = ss2;
+                        }
                         int tmp;
                         for (Integer k : members) {
                             Integer f = alphabet.get(k);
@@ -125,8 +133,8 @@ public class WAutomaton
                         }
                         qq.setWeight(qq.getWeight() + 1);
                         qq.setpreviousLocalItems(currentMap);
+                        StateStack.push(qq);
                         currentMap.clear();
-                        //current_root.addItem(item, qq);
                         current_root = qq;
                         p = qq;
                         break;
@@ -149,7 +157,6 @@ public class WAutomaton
                                 FrequentItems.put(item, ss);
                             }
                         }
-                        
                         p = q;
                 }
             }
