@@ -18,19 +18,19 @@ public class IState extends State {
         weight = w;
     }
     
-    public BitSet getprior(){
+    public BitSet getPrior(){
         return prior;
     }
 
-    public void setprior(BitSet s){
+    public void setPrior(BitSet s){
         prior.or(s);
     }
 
-    public BitSet getfollow(){
+    public BitSet getFollow(){
         return follow;
     }
 
-    public void setfollow(BitSet b){
+    public void setFollow(BitSet b){
         follow.or(b);
     }
 

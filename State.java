@@ -3,7 +3,7 @@ import java.util.*;
     public class State implements Comparable<State>{
     boolean type;                                         /* flag : the state is an itemset delimiter */
     final HashMap<Integer,State> transitions;             /* Immediate transition list */
-    int start, end;                                       /* codes for reachability (descendence) queries */
+    private int start, end;                                       /* codes for reachability (descendence) queries */
     IState root;                /* the root of the subtree: the begining of the itemset that contains this state */
     
     public State(boolean stateType) {
@@ -12,6 +12,8 @@ import java.util.*;
     }
 
     public boolean getType() { return type;}
+
+    public void setType(boolean type) { this.type = type; }
   
     protected Map<Integer, State > getTransitions() { return transitions; }
 
@@ -21,7 +23,7 @@ import java.util.*;
 
     public IState getRoot() { return root; }
  
-    public void setRoot(IState r) { this.root = r; }
+    public void setRoot(IState r) { root = r; }
 
     public  void addTransition(int item, State dest) { transitions.put(item,dest); }
 
@@ -35,9 +37,8 @@ import java.util.*;
 
     public int compareTo(State t)
     {   
-        if (this.start < t.start) return -1;
-        else if (this.start > t.start) return +1;
+        if (this.getStart() < t.getStart()) return -1;
+        else if (this.getStart() > t.getStart()) return +1;
         else return 0;
     }
-    
 }
