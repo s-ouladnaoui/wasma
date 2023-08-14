@@ -23,13 +23,13 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
         return states.get(r);
     }
     
-    public void addState(IState r, State s){
-        if (this.states.containsKey(r)) {
-            this.states.get(r).add(s);
+    public void addState(State s){
+        if (this.states.containsKey(s.getRoot())) {
+            this.states.get(s.getRoot()).add(s);
         }else {
             TreeSet<State> ss = new TreeSet<State>();
             ss.add(s);
-            states.put(r, ss);
+            states.put(s.getRoot(), ss);
         }
     }
 
@@ -58,11 +58,12 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
     }
 
     public String toString(){
-        return ("States: "+getStates()); 
+        return ("States: "+getStates()+" Supp: "+getSupport()); 
     }
 
     public DfaState delta(int a){
         DfaState res = new DfaState();
+        TreeSet<State> list = new TreeSet<State>();
         for (IState r: this.getStates().keySet() ){
             Iterator<State> xit = this.getStates(r).iterator();
             Iterator<State> yit;
@@ -72,14 +73,27 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
             State x = xit.next();
             State y = yit.next();
             do {
-                if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next();}
-                else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next();}
+                if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
+                else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next(); else break;}
                 else {
-                    res.addState(r,y);
-                    if (yit.hasNext()) y = yit.next();
+                    list.add(y);
+                    if (yit.hasNext()) y = yit.next(); else break;
                 }
-            } while (xit.hasNext() && yit.hasNext());
+            } while (true);
         }
+        State ref, s;
+        Iterator<State> it = list.iterator();
+        ref = it.next();
+        res.addState(ref);
+        while (it.hasNext()){
+            s = (State) it.next();
+            res.addState(s);
+            if (s.getStart() > ref.getEnd()) {
+                ref = s;
+                res.setSupport(res.getSupport()+((IState) ref).getWeight());
+            }
+        }
+        if (a == WAutomaton.itemsetDelimiter) this.setSupport(res.getSupport());
         return res;
     }
 }

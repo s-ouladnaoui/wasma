@@ -1,8 +1,8 @@
 import java.util.BitSet;
 public class IState extends State {
 
-    public BitSet prior, follow;                 /* The set of local previous and global next items */
-    public int weight = 1;
+    public BitSet prior, follow;              /* The set of local previous and global next items */
+    public int weight = 1;                    /* as usually: the frequency(or weight) of the prefix from the root to this state */
 
     public IState () {
         super(true);

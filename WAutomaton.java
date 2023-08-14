@@ -9,11 +9,13 @@ public class WAutomaton
     static IState wnfaStartState;                         /* the initial state of the wnfa */
     static DfaState wdfaStartState;                       /* the initial state of the wnfa */
 
-    static int NbState = 0;                               /* number of states */
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
+
+    static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
+
     int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
     int NbTransactions = 0;                                /* number of transactions */
@@ -147,7 +149,6 @@ public class WAutomaton
         System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
         // prepare next items for the initial state of the DFA: and with frequent items to discard infrequent ones in subsequent processing
         wnfaStartState.getFollow().and(fItems);
-        wdfaStartState.setFollow(wnfaStartState.getFollow());
         // remove from the hashmap the states of infrequent items
         codage(wnfaStartState);
         // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
@@ -155,7 +156,7 @@ public class WAutomaton
             DfaState s = new DfaState();
             s.setSupport(alphabet.get(i));
             for (State d:lStates.get(i)){
-                s.addState(d.getRoot(), d);
+                s.addState(d);
             }
             wdfaStartState.addTransition(i, s);
             wdfaStates.add(s);
@@ -163,202 +164,14 @@ public class WAutomaton
         // add the transition by the itemsetdelimiter  (-1 here)
         DfaState s = new DfaState();
         for (State d:lStates.get(itemsetDelimiter)){
-            s.addState(d.getRoot(), d);
+            s.addState(d);
         }
         wdfaStartState.addTransition(itemsetDelimiter, s);
         wdfaStates.add(s);
     }    
 
-    /*public Set<State> Aligner(Set<State> P, Set<State> Q) {
-        Set<State> r = new TreeSet<State>();
-        Iterator<State> pit = P.iterator();
-        Iterator<State> qit = Q.iterator();
-        State p = pit.next();
-        State q = qit.next();
-        for (;;) // intresect delimiters with the result
-        {
-            int z = p.compareTo(q);
-            if (z < 0) {
-                r.getDelimiters().remove(q);
-                r.getRest().add(q);
-                if (qit.hasNext()) q = qit.next();
-                else break;
-            } else if (z == 0) {
-                if (qit.hasNext()) q = qit.next();
-                else break;
-            } else {
-                if (pit.hasNext()) p = pit.next();
-                else {
-                    for (;;) // continue with the rest of the delimiters if it is non-empty
-                    {
-                        r.getDelimiters().remove(q);
-                        r.getRest().add(q);
-                        if (qit.hasNext()) q = qit.next();
-                        else break;
-                    }
-                    break;
-                }
-            }
-        }
-        return r;
-    }
-
-    public DState delta_s(State p, int a) {   // delta from one internal state by an item a
-        DState r = new DState();
-        Set<Integer> s = p.getTransitions().keySet();
-        for (int i : s) {
-            if (i >= 0 && i < a) {
-                DState z = delta_s(p.getTransitions().get(i),a);
-                if (!z.getEtats().isEmpty()) {
-                    r.setEtats(z.getEtats());
-                    r.setSupport(r.getSupport()+z.getSupport());
-                }
-            } else if (i == a) {
-                r.getEtats().add(p.getTransitions().get(i));
-                r.setSupport(r.getSupport()+ p.getTransitions().get(i).getWeight());
-            } else break;
-        }
-        return r;
-    }
-
-    public DfaState delta_s(DfaState P, int a) { // delta from internal stateset by an item a
-        DfaState r = new DfaState();
-        r.setDelimiters(P.getDelimiters());
-        for (State p : P.getEtats()) {
-            DState z = delta_s(p,a);
-            if (!z.getEtats().isEmpty()) {
-                r.setEtats(z.getEtats());
-                r.setSupport(r.getSupport()+z.getSupport());
-            }
-        }
-        return  Aligner(r);
-    }
-
-    public  DState delta_i(State p,  int a) { // delta from one itemset-delimiter state
-        DState r = new DState();
-        if (p.getTransitions().containsKey(a)) { // Check if direct transitions contain the item a
-            State tmp = p.getTransitions().get(a);
-            r.getEtats().add(tmp);
-            r.setSupport(r.getSupport() + tmp.getWeight());
-        }
-        if (((IState) p).getItransitions().containsKey(a)) { // Check if the map of the root state (indirect transitions) contains the item a
-            for (State q : ((IState) p).getItransitions().get(a)) {
-                    r.getEtats().add(q);
-                    r.setSupport(r.getSupport() + q.getWeight());
-            }
-        }
-        return r;
-    }
-
-    public  DfaState delta_i(DfaState P,  int a) {   // delta from a stateset itemset-delimiter
-        DfaState r = new DfaState();
-        for (State p : P.getEtats()) {
-            if (((IState) p).getFollow().get(a)) {
-                r.setDelimiters(((IState) p).getItransitions().get(itemsetDelimiter));
-                DState z = delta_i(p, a);
-                if (!z.getEtats().isEmpty()) {
-                    r.setEtats(z.getEtats());
-                    r.setSupport(r.getSupport() + z.getSupport());
-                }
-            }
-        }
-        return Aligner(r);
-    }
-
-    public DfaState delta(DfaState E, int a) {
-       DfaState r = new DfaState(a);
-       if (E.getEtats().first().getType()){  //==== delta from itemsetdelimiters (sequence extension) =====
-        for (State e:E.getEtats()){ 
-            r.getEtats().addAll(((IState) e).Delta(a,true).getEtats());}
-        }
-        else { //==== delta  inside the itemsets ====
-        Set<State> Q = new TreeSet<State>(); 
-        for (State p : rootSet(E.getEtats())) 
-           Q.addAll(((IState)p).Delta(a,true).getEtats());
-        r.getEtats().addAll(Aligner(E.getEtats(), Q));
-        }
-        return r;
-    }
-    
-
-
-
-
-       if (E.getEtats().isEmpty() || w.size() == 0) return r;
-       else if (w.size() == 1) {
-                    //================ delta from itemsetdelimiters ====================
-           if (E.getPattern().size() == 0 || E.getPattern().get(E.getPattern().size()-1) == itemsetDelimiter)  // compute delta(P,a) = Q  from the Maps of the states p of P which are itemsetdelimiters
-                r = delta_i(E,w.get(0));
-           else     //================ delta inside itemsets  =====
-                r = delta_s(E,w.get(0));
-                //===============  difference between delimiters and result: the next itemsets to begin with but from the start of the last itemset
-           if (!r.getRest().isEmpty()) {
-               DfaState t = new DfaState();
-               for (State e : r.getRest())
-                   if (!(((IState)e).getFollow().isEmpty())) {
-                       t.getEtats().add(e);
-                       t.setFollow(((IState)e).getFollow());
-                   }
-               if (t.getFollow().get(w.get(0))) {
-                   ArrayList<Integer> param = new ArrayList<>();
-                   param.addAll(E.getPattern().subList(E.getPattern().lastIndexOf(itemsetDelimiter)+1,E.getPattern().size()));
-                   param.add(w.get(0));
-                   r.getRest().clear();
-                   DfaState z = delta(t,param);
-                   if (!z.getEtats().isEmpty()) {
-                       r.setEtats(z.getEtats());
-                       r.setSupport(r.getSupport() + z.getSupport());
-                   }
-                   r.setDelimiters(z.getDelimiters());
-               }
-           }
-       } else {
-           DfaState z = delta(delta(E, w.subList(0,1)),  w.subList(1, w.size()));
-           if (!z.getEtats().isEmpty()) {
-               r.setEtats(z.getEtats());
-               r.setSupport(r.getSupport() + z.getSupport());
-           }
-           r.setDelimiters(z.getDelimiters());
-       }
-       if (!r.getEtats().isEmpty()) {
-           r.setPattern(E.getPattern());
-           r.extendPattern(w.get(0));
-       }
-       return r;
-
-    public void extendState(DfaState s,  int i) {
-        ArrayList<Integer> motif = new ArrayList<>();
-        motif.add(i);
-        DfaState ns = delta(s, motif); // ns : new state = delta(s,i:item)
-        ns.setFollow(s.getFollow());
-        ns.getFollow().clear(i);
-        if (ns.getSupport() >= min_supp) {
-            DfaState ds = new DfaState();  // ds : delimiter state = delta (ns, itemsetdelimiter)
-            for (State p : ns.getDelimiters()) {
-                if (!((IState)p).getFollow().isEmpty()) ds.getEtats().add(p);
-                ds.setFollow(((IState)p).getFollow());
-            }
-            ds.setSupport(ns.getSupport());
-            ds.setPattern(ns.getPattern());
-            ds.extendPattern(itemsetDelimiter);
-            queue.add(ns);
-            queue.add(ds);
-            nbFreqSequences++;
-            System.out.println(ds);
-            try {
-                writer.write(ds.toString());
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }*/
-
     public void Determinize() {
-      
-        
         DfaState s = new DfaState();
-
         s.etats.add(startState);
         s.setFollow(((IState) startState).getFollow());
         queue.add(s);
@@ -380,7 +193,7 @@ public class WAutomaton
         long startTime = System.nanoTime();
         //automate.codage(wnfaStartState);
         //wdfaStartState.getTransitions().get(-1).computeSupport();
-        System.out.println(wdfaStates.get(1).delta(-1));
+        System.out.println(wdfaStates.get(3).delta(-1));
 
         //automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
