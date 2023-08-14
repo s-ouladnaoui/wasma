@@ -85,6 +85,7 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
         Iterator<State> it = list.iterator();
         ref = it.next();
         res.addState(ref);
+        res.setSupport(res.getSupport()+((IState) ref).getWeight());
         while (it.hasNext()){
             s = (State) it.next();
             res.addState(s);
