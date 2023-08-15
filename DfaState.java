@@ -3,9 +3,9 @@ import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Iterator;
 
-public class DfaState {   // one state of the wdfa is a set of states of the nfa 
-    HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their roots
-    HashMap<Integer,DfaState> transitions;   // the set of transitions in the dfa from this state
+public class DfaState {   // one state of the wDFA is a set of states of the nfa 
+    HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
+    HashMap<Integer,DfaState> transitions;   // the set of DFA transitions from this state by item
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
@@ -24,8 +24,8 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
     }
     
     public void addState(State s){
-        if (this.states.containsKey(s.getRoot())) {
-            this.states.get(s.getRoot()).add(s);
+        if (states.containsKey(s.getRoot())) {
+            states.get(s.getRoot()).add(s);
         }else {
             TreeSet<State> ss = new TreeSet<State>();
             ss.add(s);
@@ -38,7 +38,7 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
     }
 
     public void setSupport(int sprt) {
-        this.support = sprt;
+        support += sprt;
     }
 
     public BitSet getFollow(){
@@ -62,13 +62,14 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
     }
 
     public DfaState delta(int a){
-        DfaState res = new DfaState();
-        TreeSet<State> list = new TreeSet<State>();
-        for (IState r: this.getStates().keySet() ){
-            Iterator<State> xit = this.getStates(r).iterator();
+        DfaState res = new DfaState();                  // res = delta(this,a)
+        TreeSet<State> list = new TreeSet<State>();     // set of the states of res 
+        BitSet br = new BitSet();
+        for (IState r: getStates().keySet() ){
+            Iterator<State> xit = getStates(r).iterator();
             Iterator<State> yit;
-            if (WAutomaton.wdfaStartState.getTransitions().get(a).getStates().containsKey(r)) {
-                yit = WAutomaton.wdfaStartState.getTransitions().get(a).getStates(r).iterator();
+            if (WAutomaton.wDFAStartState.getTransitions().get(a).getStates().containsKey(r)) {
+                yit = WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator();
             } else continue;
             State x = xit.next();
             State y = yit.next();
@@ -77,6 +78,7 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
                 else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next(); else break;}
                 else {
                     list.add(y);
+                    br.set(WAutomaton.wNFAStates.indexOf(y));
                     if (yit.hasNext()) y = yit.next(); else break;
                 }
             } while (true);
@@ -85,16 +87,21 @@ public class DfaState {   // one state of the wdfa is a set of states of the nfa
         Iterator<State> it = list.iterator();
         ref = it.next();
         res.addState(ref);
-        res.setSupport(res.getSupport()+((IState) ref).getWeight());
+        setFollow(((IState) ref).getPrior());
+        res.setSupport(((IState) ref).getWeight());
         while (it.hasNext()){
             s = (State) it.next();
             res.addState(s);
             if (s.getStart() > ref.getEnd()) {
                 ref = s;
-                res.setSupport(res.getSupport()+((IState) ref).getWeight());
+                res.setSupport(((IState) ref).getWeight());
+                setFollow(((IState) ref).getPrior());
             }
         }
-        if (a == WAutomaton.itemsetDelimiter) this.setSupport(res.getSupport());
+        if (a == WAutomaton.itemsetDelimiter && res.getSupport() > WAutomaton.min_supp) {
+            this.setSupport(res.getSupport());
+            if(!WAutomaton.stateMap.containsKey(br))  WAutomaton.stateMap.put(br, res);
+        }
         return res;
-    }
+    }    
 }

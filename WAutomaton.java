@@ -1,13 +1,15 @@
 import java.io.*;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
+
 /* The dataset represented by a Weighted Automaton */
 public class WAutomaton
 {
-    static ArrayList<State> wnfaStates;                   /* the set of states of the weighted nfa */
-    static ArrayList<DfaState> wdfaStates,queue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
-    static IState wnfaStartState;                         /* the initial state of the wnfa */
-    static DfaState wdfaStartState;                       /* the initial state of the wnfa */
+    static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
+    static ArrayList<DfaState> wDFAStates,queue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
+    static HashMap<BitSet,DfaState> stateMap;
+    static IState wNFAStartState;                         /* the initial state of the wnfa */
+    static DfaState wDFAStartState;                       /* the initial state of the wnfa */
 
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
@@ -23,11 +25,12 @@ public class WAutomaton
 
 
     public WAutomaton (int ms) {
-        wnfaStates = new ArrayList<>();   
-        wnfaStates.add(wnfaStartState = new IState());        // the initial state of the weighted nfa
-        wdfaStates = new ArrayList<>();         
-        wdfaStates.add(wdfaStartState = new DfaState());      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
-        wdfaStartState.getStates().put(wnfaStartState, null);
+        wNFAStates = new ArrayList<>();   
+        wNFAStates.add(wNFAStartState = new IState());        // the initial state of the weighted nfa
+        wDFAStates = new ArrayList<>();         
+        wDFAStates.add(wDFAStartState = new DfaState());      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
+        wDFAStartState.getStates().put(wNFAStartState, null);
+        stateMap = new HashMap<>();
         queue = new ArrayList<DfaState>();
         min_supp = ms;
     }
@@ -35,14 +38,14 @@ public class WAutomaton
     public  String toString() {                /* Print the automaton */
         String ch = "";
         int i = 0;
-        for (Object p:wnfaStates) {
+        for (Object p:wNFAStates) {
             ch = ch+i+" : "+p.toString()+"\n";
             i++;
         }
         return ch;
     }
 
-    /* each state has a double integer code (start & end) used for reachability check */
+    /* each state of the wNFA has a double integer code (start & end) used for reachability check */
     public void codage (State s) {     
         s.setStart(code++);
         for (State q  : s.getTransitions().values())
@@ -53,11 +56,11 @@ public class WAutomaton
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
         State  p,q;
-        IState current_root = wnfaStartState;
+        IState current_root = wNFAStartState;
         p = current_root;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
         Stack<IState> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
-        StateStack.push(wnfaStartState);
+        StateStack.push(wNFAStartState);
         HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
         BitSet currentItems = new BitSet(),fItems = new BitSet();  /* bitset of the frequent items (the set F1) */
@@ -92,7 +95,7 @@ public class WAutomaton
                                 if (!fItems.get(k) && tmp >= min_supp) fItems.set(k);
                             }
                         }
-                        p = current_root = (IState) wnfaStartState;
+                        p = current_root = (IState) wNFAStartState;
                         members.clear();
                         break;
                     case itemsetDelimiter :
@@ -102,7 +105,7 @@ public class WAutomaton
                         } else {
                             ++NbState;
                             qq = new IState();
-                            wnfaStates.add(qq);
+                            wNFAStates.add(qq);
                             p.addTransition(item, qq);
                             qq.setRoot(current_root);
                             if (lStates.containsKey(item)) lStates.get(item).add(qq);
@@ -112,7 +115,7 @@ public class WAutomaton
                                 lStates.put(item, r);
                             }
                         }
-                        qq.setWeight(qq.getWeight() + 1);
+                        qq.setWeight(1);
                         qq.setPrior(currentItems);
                         StateStack.push(qq);
                         currentItems.clear();
@@ -127,7 +130,7 @@ public class WAutomaton
                         } else {
                             ++NbState;
                             q = new State(false);
-                            wnfaStates.add(q);
+                            wNFAStates.add(q);
                             p.addTransition(item, q);
                             q.setRoot(current_root);
                             if (lStates.containsKey(item)) lStates.get(item).add(q);
@@ -148,42 +151,48 @@ public class WAutomaton
         System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
         System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
         // prepare next items for the initial state of the DFA: and with frequent items to discard infrequent ones in subsequent processing
-        wnfaStartState.getFollow().and(fItems);
+        wNFAStartState.getFollow().and(fItems);
         // remove from the hashmap the states of infrequent items
-        codage(wnfaStartState);
-        // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
-        for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
-            DfaState s = new DfaState();
-            s.setSupport(alphabet.get(i));
-            for (State d:lStates.get(i)){
-                s.addState(d);
-            }
-            wdfaStartState.addTransition(i, s);
-            wdfaStates.add(s);
-        }
+        codage(wNFAStartState);
         // add the transition by the itemsetdelimiter  (-1 here)
         DfaState s = new DfaState();
         for (State d:lStates.get(itemsetDelimiter)){
             s.addState(d);
         }
-        wdfaStartState.addTransition(itemsetDelimiter, s);
-        wdfaStates.add(s);
+        wDFAStartState.addTransition(itemsetDelimiter, s);
+        wDFAStates.add(s);
+        // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
+        for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
+            s = new DfaState();
+            //s.setSupport(alphabet.get(i));
+            for (State d:lStates.get(i)){
+                s.addState(d);
+            }
+            wDFAStartState.addTransition(i, s);
+            wDFAStates.add(s);
+            queue.add(s);
+            DfaState r = s.delta(itemsetDelimiter);
+            s.addTransition(itemsetDelimiter, r);
+            wDFAStates.add(r);
+            queue.add(r);
+        }
+        
     }    
 
     public void Determinize() {
-        DfaState s = new DfaState();
-        s.etats.add(startState);
-        s.setFollow(((IState) startState).getFollow());
-        queue.add(s);
+        DfaState s;
         while (!queue.isEmpty()) {
             s = queue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                if (fItems.get(i)) {
-                    extendState(s,i); 
+                    DfaState r = s.delta(i); 
+                    if (r.getSupport() >= min_supp) {
+                        System.out.println(r+" fréquente\n");
+                        nbFreqSequences++;
+                        queue.add(r);
+                    }
                 }
             }
         }
-    }
 
     public static void main(String[] args) throws IOException {
         WAutomaton automate = new WAutomaton(Integer.parseInt(args[0]));    // min support
@@ -191,11 +200,10 @@ public class WAutomaton
         automate.loadData(args[1]);                                         // input file
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
-        //automate.codage(wnfaStartState);
-        //wdfaStartState.getTransitions().get(-1).computeSupport();
-        System.out.println(wdfaStates.get(3).delta(-1));
-
-        //automate.Determinize(); 
+        //automate.codage(wNFAStartState);
+        //wDFAStartState.getTransitions().get(-1).computeSupport();
+        //System.out.println(wDFAStates.get(1).delta(-1));
+        automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
         String endTime = String.format("%.2f ms",(System.nanoTime()-startTime)/1000000d);

@@ -13,7 +13,7 @@ import java.util.*;
 
     public boolean getType() { return type;}
 
-    public void setType(boolean type) { this.type = type; }
+    public void setType(boolean t) { type = t; }
   
     protected Map<Integer, State > getTransitions() { return transitions; }
 
@@ -37,8 +37,8 @@ import java.util.*;
 
     public int compareTo(State t)
     {   
-        if (this.getStart() < t.getStart()) return -1;
-        else if (this.getStart() > t.getStart()) return +1;
+        if (getStart() < t.getStart()) return -1;
+        else if (getStart() > t.getStart()) return +1;
         else return 0;
     }
 }

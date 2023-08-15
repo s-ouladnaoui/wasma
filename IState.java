@@ -16,7 +16,7 @@ public class IState extends State {
     }
 
     public void setWeight(int w){
-        weight = w;
+        weight += w;
     }
     
     public BitSet getPrior(){
