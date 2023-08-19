@@ -1,9 +1,10 @@
 import java.util.*;
 /* Weighted Automaton State Class */
-    public class State implements Comparable<State>{
-    boolean type;                                         /* flag : the state is an itemset delimiter */
-    final HashMap<Integer,State> transitions;             /* Immediate transition list */
-    private int start, end;                                       /* codes for reachability (descendence) queries */
+    public class State implements Comparable<State> {
+        
+    boolean type;                                  /* flag : the state is an itemset delimiter */
+    final HashMap<Integer,State> transitions;      /* Immediate transition list */
+    private int start, end;                        /* codes for reachability (descendence) queries */
     IState root;                /* the root of the subtree: the begining of the itemset that contains this state */
     
     public State(boolean stateType) {
