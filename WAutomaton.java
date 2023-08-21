@@ -28,7 +28,7 @@ public class WAutomaton {
         wNFAStates = new ArrayList<>();   
         wNFAStates.add(wNFAStartState = new IState());        // the initial state of the weighted nfa
         //wDFAStates = new ArrayList<>();         
-        wDFAStartState = new DfaState();      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
+        wDFAStartState = new DfaState(0);      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         wDFAStateMap = new HashMap<>();
         DFAqueue = new ArrayList<DfaState>();
@@ -143,62 +143,69 @@ public class WAutomaton {
                             }
                         }
                         p = q;
+                    }
                 }
             }
-        }
-        in.close();
-        long endTime = System.nanoTime();
-        writer.write("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions + "\n");
-        writer.write("Loading time: " + (endTime-startTime)/1000000 + " ms\n");
-        System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
-        System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
-        /*  ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */
-        // set the start and end code values for the states of the NFA
-        codage(wNFAStartState);     
-        // add the transition from wDFAStartState by the itemsetdelimiter  (-1 here)
-        
-        DfaState s = new DfaState();
-        for (State d:lStates.get(itemsetDelimiter)){
-            s.addState(d);
-        }
-        wDFAStartState.addTransition(itemsetDelimiter, s);
-        DFAqueue.add(s);
-        
-        // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
-        
-        for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
-            s = new DfaState();
-            s.setSupport(alphabet.get(i));
-            for (State d:lStates.get(i)){
+            in.close();
+            long endTime = System.nanoTime();
+            writer.write("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions + "\n");     
+            writer.write("Loading time: " + (endTime-startTime)/1000000 + " ms\n");
+            System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
+            System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
+            /*  ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
+            // set the start and end code values for the states of the NFA
+            codage(wNFAStartState);
+            // add the transition from wDFAStartState by the itemsetdelimiter  (-1 here)
+            DfaState s = new DfaState(itemsetDelimiter);
+            for (State d:lStates.get(itemsetDelimiter)){
                 s.addState(d);
             }
-            wDFAStartState.addTransition(i, s);
-            DFAqueue.add(s);
-            DfaState r = new DfaState();
-            Iterator<State> yit = wDFAStartState.getTransitions().get(itemsetDelimiter).listStates().iterator();            
-            Iterator<State> xit = s.listStates().iterator();
-            State x = xit.next();
-            State y = yit.next();
-            do {
-                if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
-                else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next(); else break;}
-                else {
-                    r.addState(y);;
-                    if (yit.hasNext()) y = yit.next(); else break;
-                }    
-            } while (true);
-            s.addTransition(itemsetDelimiter,r);
-            r.setSupport(s.getSupport());
-            DFAqueue.add(r);
-        }      
-    }    
+            wDFAStartState.addTransition(itemsetDelimiter, s);
+            //DFAqueue.add(s);
+            // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
+            for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
+                s = new DfaState(i);
+                DfaState res = new DfaState(itemsetDelimiter);
+                s.setSupport(alphabet.get(i));
+                for (State d:lStates.get(i)){
+                    s.addState(d);
+                }
+                wDFAStartState.addTransition(i, s);
+                DFAqueue.add(s);
+                BitSet pr = new BitSet();
+                for (IState r: s.getStates().keySet() ) {
+                    Iterator<State> xit = s.getStates(r).iterator();
+                    Iterator<State> yit = WAutomaton.wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(r).iterator();
+                    State x = xit.next();
+                    State y = yit.next();
+                    do {
+                        if (x.getEnd() < y.getStart()) { if (xit.hasNext()) x = xit.next(); else break;}
+                        else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next(); else break;}
+                        else {
+                            res.addState(y);
+                            pr.or(((IState)y).getPrior());
+                            if (yit.hasNext()) y = yit.next(); else break;
+                        }
+                    } while (true);
+                }
+                s.addTransition(itemsetDelimiter,res);
+                for (int j = pr.nextSetBit(0); j > 0; j = pr.nextSetBit(j + 1)) {
+                    if (j <= i) pr.clear(j); 
+                }
+                s.setFollow(pr);
+                res.setSupport(s.getSupport());
+                DFAqueue.add(res);
+            }
+        }    
 
     public void Determinize() {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                    DfaState r = s.delta(i); 
+                    DfaState r;
+                    if (s.getItem() == itemsetDelimiter) r = s.delta_s(i); 
+                    else r = s.delta(i);  
                     if (r.getSupport() >= min_supp) {
                         System.out.println(r+" fréquent\n");
                         nbFreqSequences++;
@@ -215,8 +222,7 @@ public class WAutomaton {
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
         //automate.codage(wNFAStartState);
-        wDFAStartState.getTransitions().get(1).delta(3);
-        //System.out.println(wDFAStates.get(1).delta(-1));
+        //System.out.println(wDFAStartState.getTransitions().get(1).delta(3));
         automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);

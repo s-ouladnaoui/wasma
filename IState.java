@@ -36,8 +36,8 @@ public class IState extends State {
     }
 
     public String toString() {
-        return " ( "+ getType()+", "+getStart()+", "+getEnd()+"; w = "+getWeight() //+
+        return " ( "+ getType()+" : "//+getStart()+", "+getEnd()+"; w = "+getWeight() //+
         //" follow: "+follow+" prior: "+prior
-        +" )" ;
+        +WAutomaton.wNFAStates.indexOf((State)this)+" )" ;
     }
 }

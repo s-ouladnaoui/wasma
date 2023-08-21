@@ -1,7 +1,7 @@
 import java.util.*;
 /* Weighted Automaton State Class */
     public class State implements Comparable<State> {
-        
+
     boolean type;                                  /* flag : the state is an itemset delimiter */
     final HashMap<Integer,State> transitions;      /* Immediate transition list */
     private int start, end;                        /* codes for reachability (descendence) queries */
@@ -33,7 +33,9 @@ import java.util.*;
     public void setEnd(int e) { end = e; }
 
     public String toString() {
-        return " ( "+ getType()+", "+getStart()+", "+getEnd()+" )" ;
+        return //" ( "+ //getType()+", "+getStart()+", "+getEnd()+" )" ;
+               ((Integer) WAutomaton.wNFAStates.indexOf(this)).toString();
+                //+" )";
     }
 
     public int compareTo(State t)
