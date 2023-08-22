@@ -7,7 +7,7 @@ public class WAutomaton {
 
     static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
     static ArrayList<DfaState> DFAqueue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
-    static HashMap<BitSet,DfaState> wDFAStateMap;
+    static HashMap<BitSet,DFAs> DFAStateMap;
     static IState wNFAStartState;                         /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
 
@@ -18,21 +18,25 @@ public class WAutomaton {
     static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
 
-    int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
+    static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
     int NbTransactions = 0;                                /* number of transactions */
+    static ArrayList<Integer> currentPattern;
+
     BufferedWriter writer ;                               /* for output */
 
 
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
         wNFAStates.add(wNFAStartState = new IState());        // the initial state of the weighted nfa
-        //wDFAStates = new ArrayList<>();         
         wDFAStartState = new DfaState(0);      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
-        wDFAStateMap = new HashMap<>();
+        DFAStateMap = new HashMap<>();
+        DFAs m = new DFAs(wDFAStartState.listStateBits(),0);
+        DFAStateMap.put(wDFAStartState.listStateBits(), m);
         DFAqueue = new ArrayList<DfaState>();
         min_supp = ms;
+        currentPattern = new ArrayList<Integer>();
     }
 
     public  String toString() {                /* Print the automaton */
@@ -161,6 +165,7 @@ public class WAutomaton {
                 s.addState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
+            BitSet pr = new BitSet();
             //DFAqueue.add(s);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
@@ -171,8 +176,8 @@ public class WAutomaton {
                     s.addState(d);
                 }
                 wDFAStartState.addTransition(i, s);
-                DFAqueue.add(s);
-                BitSet pr = new BitSet();
+                DFAqueue.add(0,s);
+                pr = new BitSet();
                 for (IState r: s.getStates().keySet() ) {
                     Iterator<State> xit = s.getStates(r).iterator();
                     Iterator<State> yit = WAutomaton.wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(r).iterator();
@@ -194,7 +199,7 @@ public class WAutomaton {
                 }
                 s.setFollow(pr);
                 res.setSupport(s.getSupport());
-                DFAqueue.add(res);
+                DFAqueue.add(res);  
             }
         }    
 
@@ -203,17 +208,27 @@ public class WAutomaton {
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                    DfaState r;
-                    if (s.getItem() == itemsetDelimiter) r = s.delta_s(i); 
-                    else r = s.delta(i);  
-                    if (r.getSupport() >= min_supp) {
+                DfaState r;
+                if (s.getItem() == itemsetDelimiter) r = s.delta_s(i); 
+                else r = s.delta(i);  
+                int sprt = r.getSupport();
+                if ( sprt >= min_supp) {
+                    BitSet bs = r.listStateBits();
+                    if (!DFAStateMap.containsKey(bs)){
+                        DFAs newDFAState = new DFAs(bs,sprt);
+                        DFAStateMap.put(bs, newDFAState);
+                        if (DFAStateMap.containsKey(s.listStateBits())) DFAStateMap.get(s.listStateBits()).next.put(i, newDFAState);
                         System.out.println(r+" fréquent\n");
                         nbFreqSequences++;
-                        DFAqueue.add(r);
+                        DFAqueue.add(0,r);
+                    if (s.getItem() != itemsetDelimiter) {
+                        DFAqueue.add(s.getTransitions().get(itemsetDelimiter));
                     }
-                }
+                } else DFAStateMap.get(bs).listFrom(currentPattern);                     
             }
         }
+    }
+    }
 
     public static void main(String[] args) throws IOException {
         WAutomaton automate = new WAutomaton(Integer.parseInt(args[0]));    // min support
@@ -227,8 +242,8 @@ public class WAutomaton {
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
         String endTime = String.format("%.2f ms",(System.nanoTime()-startTime)/1000000d);
-        automate.writer.write("Min Supp: " + min_supp + "\nNb Frequent Sequences : " + automate.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
-        System.out.println("Min Supp: " + min_supp + "\nNb Frequent Sequences: " + automate.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
+        automate.writer.write("Min Supp: " + min_supp + "\nNb Frequent Sequences : " + WAutomaton.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
+        System.out.println("Min Supp: " + min_supp + "\nNb Frequent Sequences: " + WAutomaton.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
         automate.writer.close();
     }
 }

@@ -1,4 +1,7 @@
 import java.util.BitSet;
+
+// extended version of the State class for itemsetdelimiter states
+
 public class IState extends State {
 
     public BitSet prior, follow;          /* The set of local previous and global next items */
@@ -36,8 +39,8 @@ public class IState extends State {
     }
 
     public String toString() {
-        return " ( "+ getType()+" : "//+getStart()+", "+getEnd()+"; w = "+getWeight() //+
+        return //" ( "+ getType()+" : "//+getStart()+", "+getEnd()+"; w = "+getWeight() //+
         //" follow: "+follow+" prior: "+prior
-        +WAutomaton.wNFAStates.indexOf((State)this)+" )" ;
+        ((Integer)WAutomaton.wNFAStates.indexOf(this)).toString();
     }
 }
