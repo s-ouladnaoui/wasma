@@ -17,6 +17,7 @@ public class DfaState {
         states = new HashMap<IState,TreeSet<State>>();
         transitions = new HashMap<Integer,DfaState>();
         follow = new BitSet(); 
+        pattern =  new ArrayList<Integer>();
     }
 
     public int getItem(){
@@ -25,6 +26,14 @@ public class DfaState {
 
     public void setItem(int i){
         item = i;
+    }
+
+    public ArrayList<Integer> getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(int i) {
+        pattern.add(i);
     }
 
     public HashMap<IState,TreeSet<State>> getStates(){
@@ -107,6 +116,9 @@ public class DfaState {
     public DfaState delta(int a) {
         DfaState res = new DfaState(a);    // res_a = delta(this,a)
         BitSet pr = new BitSet();       // local next items for subsequent (itemset) extensions
+        ArrayList<Integer> p = new ArrayList<>(this.getPattern());
+        p.add(a); 
+        res.pattern = p;
         if (a == WAutomaton.itemsetDelimiter)  {
             for (IState r: getStates().keySet() ){
                 WAutomaton.Align(getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator(),res,  false);            

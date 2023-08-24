@@ -20,8 +20,6 @@ public class WAutomaton {
     static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
     int NbTransactions = 0;                                /* number of transactions */
-    static ArrayList<Integer> currentPattern;
-
     BufferedWriter writer ;                               /* for output */
 
 
@@ -33,7 +31,6 @@ public class WAutomaton {
         DFAStateMap = new HashMap<>();
         DFAqueue = new ArrayList<DfaState>();
         min_supp = ms;
-        currentPattern = new ArrayList<Integer>();
     }
 
     public  String toString() {                /* Print the automaton */
@@ -75,8 +72,6 @@ public class WAutomaton {
         }
         return bs;
     }
-
-    
 
     /* ====================================== dataset loader ========================================================*/
 
@@ -192,10 +187,12 @@ public class WAutomaton {
                     s.addState(d);
                 }
                 wDFAStartState.addTransition(i, s);
+                s.setPattern(i); 
                 DFAqueue.add(s);
-                System.out.println(0+" => "+i+" = "+s+" fréquent\n");
                 nbFreqSequences++;
-                DFAqueue.add(s.d1(itemsetDelimiter));
+                DfaState r = s.delta(itemsetDelimiter);
+                DFAqueue.add(r);
+                System.out.println(0+" => "+i+" = "+s+": "+r.getPattern() +" fréquent: "+r.getSupport());
             }
         }    
 
@@ -204,8 +201,8 @@ public class WAutomaton {
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                DfaState r1 = s.d1(i);
-                DfaState r2 = r1.d1(itemsetDelimiter);
+                DfaState r1 = s.delta(i);
+                DfaState r2 = r1.delta(itemsetDelimiter);
                 int sprt = r2.getSupport();
                 if (sprt >= min_supp) {
                     BitSet bs1 = r1.listStateBits();
@@ -216,16 +213,16 @@ public class WAutomaton {
                         newDFAState1.next.put(itemsetDelimiter, newDFAState2);
                         DFAStateMap.put(bs1, newDFAState1);
                         DFAStateMap.put(bs2, newDFAState2);
-                        if (!DFAStateMap.containsKey(s.listStateBits())) DFAStateMap.put(s.listStateBits(), new DFAs(s.listStateBits(),s.getSupport()));
+                        DFAStateMap.put(s.listStateBits(), new DFAs(s.listStateBits(),s.getSupport()));
                         DFAStateMap.get(s.listStateBits()).next.put(i, newDFAState1);
-                        System.out.println(s+" => "+i+" = "+r1+" fréquent\n");
+                        //System.out.println(s+" => "+i+" = "+r1+": "+r2.getPattern() +"fréquent\n");
+                        System.out.println(s+" => "+i+" = "+r1+": "+r2.getPattern() +" fréquent: "+sprt);
                         nbFreqSequences++;
-                        DFAqueue.add(r1);
-                        DFAqueue.add(r2);
+
+                        if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
+                        if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);
                     } else {
-                        System.out.println(s+" => "+i+" = "+r1+" fréquent\n");
-                        System.out.println(bs1+" exists!");
-                        DFAStateMap.get(bs1).listFrom(currentPattern);                     
+                        DFAStateMap.get(bs1).listFrom(r1.getPattern());                     
                     }
                 }
             } 
