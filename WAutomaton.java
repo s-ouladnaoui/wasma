@@ -1,5 +1,4 @@
 import java.io.*;
-
 import java.util.*;
 
 /* The dataset represented by a Weighted Automaton */
@@ -32,8 +31,6 @@ public class WAutomaton {
         wDFAStartState = new DfaState(0);      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         DFAStateMap = new HashMap<>();
-        DFAs m = new DFAs(wDFAStartState.listStateBits(),0);
-        DFAStateMap.put(wDFAStartState.listStateBits(), m);
         DFAqueue = new ArrayList<DfaState>();
         min_supp = ms;
         currentPattern = new ArrayList<Integer>();
@@ -56,11 +53,34 @@ public class WAutomaton {
             codage(q);
         s.setEnd(code++);
     }
+    // for reachability between two sets of states align them and check the descendance relation 
+    static public void Align(Iterator<State> xit, Iterator<State> yit, DfaState s, boolean jump) {
+        State x = xit.next();
+        State y = yit.next();
+        do {
+            if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
+            else if (y.getEnd() < x.getStart() || x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) { if (yit.hasNext()) y = yit.next(); else break;}
+            else {
+                if (!jump) s.addState(y);
+                else if (x.getRoot() == y.getRoot()) s.addState(y);
+                if (yit.hasNext()) y = yit.next(); else break;
+            }
+        } while (true);
+    }
+
+    // clear already processed local next items 
+    static public BitSet clearBs(BitSet bs, int i) {
+        for (int j = bs.nextSetBit(0); j > 0; j = bs.nextSetBit(j + 1)) {
+            if (j <= i) bs.clear(j); 
+        }
+        return bs;
+    }
+
+    
 
     /* ====================================== dataset loader ========================================================*/
 
     public void loadData(String inputfile) throws IOException {
-
         State  p,q;
         IState current_root = wNFAStartState;
         p = current_root;
@@ -73,7 +93,6 @@ public class WAutomaton {
         HashMap<Integer,ArrayList<State>> lStates = new HashMap<Integer,ArrayList<State>>();
         String transaction;
         long startTime = System.nanoTime();
-
         while ((transaction = in.readLine()) != null)
         {
             String[] items = transaction.split(itemSeparator);
@@ -165,41 +184,18 @@ public class WAutomaton {
                 s.addState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
-            BitSet pr = new BitSet();
-            //DFAqueue.add(s);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState(i);
-                DfaState res = new DfaState(itemsetDelimiter);
                 s.setSupport(alphabet.get(i));
                 for (State d:lStates.get(i)){
                     s.addState(d);
                 }
                 wDFAStartState.addTransition(i, s);
-                DFAqueue.add(0,s);
-                pr = new BitSet();
-                for (IState r: s.getStates().keySet() ) {
-                    Iterator<State> xit = s.getStates(r).iterator();
-                    Iterator<State> yit = WAutomaton.wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(r).iterator();
-                    State x = xit.next();
-                    State y = yit.next();
-                    do {
-                        if (x.getEnd() < y.getStart()) { if (xit.hasNext()) x = xit.next(); else break;}
-                        else if (y.getEnd() < x.getStart()) { if (yit.hasNext()) y = yit.next(); else break;}
-                        else {
-                            res.addState(y);
-                            pr.or(((IState)y).getPrior());
-                            if (yit.hasNext()) y = yit.next(); else break;
-                        }
-                    } while (true);
-                }
-                s.addTransition(itemsetDelimiter,res);
-                for (int j = pr.nextSetBit(0); j > 0; j = pr.nextSetBit(j + 1)) {
-                    if (j <= i) pr.clear(j); 
-                }
-                s.setFollow(pr);
-                res.setSupport(s.getSupport());
-                DFAqueue.add(res);  
+                DFAqueue.add(s);
+                System.out.println(0+" => "+i+" = "+s+" fréquent\n");
+                nbFreqSequences++;
+                DFAqueue.add(s.d1(itemsetDelimiter));
             }
         }    
 
@@ -208,26 +204,32 @@ public class WAutomaton {
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove(0);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                DfaState r;
-                if (s.getItem() == itemsetDelimiter) r = s.delta_s(i); 
-                else r = s.delta(i);  
-                int sprt = r.getSupport();
-                if ( sprt >= min_supp) {
-                    BitSet bs = r.listStateBits();
-                    if (!DFAStateMap.containsKey(bs)){
-                        DFAs newDFAState = new DFAs(bs,sprt);
-                        DFAStateMap.put(bs, newDFAState);
-                        if (DFAStateMap.containsKey(s.listStateBits())) DFAStateMap.get(s.listStateBits()).next.put(i, newDFAState);
-                        System.out.println(r+" fréquent\n");
+                DfaState r1 = s.d1(i);
+                DfaState r2 = r1.d1(itemsetDelimiter);
+                int sprt = r2.getSupport();
+                if (sprt >= min_supp) {
+                    BitSet bs1 = r1.listStateBits();
+                    BitSet bs2 = r2.listStateBits();
+                    if (!DFAStateMap.containsKey(bs1)){
+                        DFAs newDFAState1 = new DFAs(bs1,sprt);
+                        DFAs newDFAState2 = new DFAs(bs2,sprt);
+                        newDFAState1.next.put(itemsetDelimiter, newDFAState2);
+                        DFAStateMap.put(bs1, newDFAState1);
+                        DFAStateMap.put(bs2, newDFAState2);
+                        if (!DFAStateMap.containsKey(s.listStateBits())) DFAStateMap.put(s.listStateBits(), new DFAs(s.listStateBits(),s.getSupport()));
+                        DFAStateMap.get(s.listStateBits()).next.put(i, newDFAState1);
+                        System.out.println(s+" => "+i+" = "+r1+" fréquent\n");
                         nbFreqSequences++;
-                        DFAqueue.add(0,r);
-                    if (s.getItem() != itemsetDelimiter) {
-                        DFAqueue.add(s.getTransitions().get(itemsetDelimiter));
+                        DFAqueue.add(r1);
+                        DFAqueue.add(r2);
+                    } else {
+                        System.out.println(s+" => "+i+" = "+r1+" fréquent\n");
+                        System.out.println(bs1+" exists!");
+                        DFAStateMap.get(bs1).listFrom(currentPattern);                     
                     }
-                } else DFAStateMap.get(bs).listFrom(currentPattern);                     
-            }
+                }
+            } 
         }
-    }
     }
 
     public static void main(String[] args) throws IOException {
