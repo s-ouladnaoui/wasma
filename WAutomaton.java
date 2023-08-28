@@ -5,7 +5,7 @@ import java.util.*;
 public class WAutomaton {
 
     static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
-    static ArrayList<DfaState> DFAqueue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
+    static ArrayDeque<DfaState> DFAqueue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
     static HashMap<BitSet,DFAs> DFAStateMap;
     static IState wNFAStartState;                         /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
@@ -29,7 +29,7 @@ public class WAutomaton {
         wDFAStartState = new DfaState(0);      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         DFAStateMap = new HashMap<>();
-        DFAqueue = new ArrayList<DfaState>();
+        DFAqueue = new ArrayDeque<DfaState>();
         min_supp = ms;
     }
 
@@ -199,7 +199,7 @@ public class WAutomaton {
     public void Determinize() {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
-            s = DFAqueue.remove(0);
+            s = DFAqueue.remove();
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
                 DfaState r1 = s.delta(i);
                 DfaState r2 = r1.delta(itemsetDelimiter);

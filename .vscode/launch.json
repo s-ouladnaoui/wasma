@@ -10,8 +10,8 @@
             "name": "Launch WAutomaton",
             "request": "launch",
             "mainClass": "WAutomaton",
-            "projectName": "src_6f1bacbf",
-            "args": "2 ../in.txt res"
+            "projectName": "",
+            "args": "1 ../in.txt res"
         }
     ]
 }
