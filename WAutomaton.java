@@ -5,10 +5,10 @@ import java.util.*;
 public class WAutomaton {
 
     static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
-    static ArrayDeque<DfaState> DFAqueue;          /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
-    static HashMap<BitSet,DFAs> DFAStateMap;
+    static ArrayDeque<DfaState> DFAqueue;                 /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
     static IState wNFAStartState;                         /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
+    static BitSet fItems = new BitSet();
 
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
@@ -26,9 +26,8 @@ public class WAutomaton {
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
         wNFAStates.add(wNFAStartState = new IState());        // the initial state of the weighted nfa
-        wDFAStartState = new DfaState(0);      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
+        wDFAStartState = new DfaState();      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
-        DFAStateMap = new HashMap<>();
         DFAqueue = new ArrayDeque<DfaState>();
         min_supp = ms;
     }
@@ -50,31 +49,8 @@ public class WAutomaton {
             codage(q);
         s.setEnd(code++);
     }
-    // for reachability between two sets of states align them and check the descendance relation 
-    static public void Align(Iterator<State> xit, Iterator<State> yit, DfaState s, boolean jump) {
-        State x = xit.next();
-        State y = yit.next();
-        do {
-            if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
-            else if (y.getEnd() < x.getStart() || x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) { if (yit.hasNext()) y = yit.next(); else break;}
-            else {
-                if (!jump) s.addState(y);
-                else if (x.getRoot() == y.getRoot()) s.addState(y);
-                if (yit.hasNext()) y = yit.next(); else break;
-            }
-        } while (true);
-    }
-
-    // clear already processed local next items 
-    static public BitSet clearBs(BitSet bs, int i) {
-        for (int j = bs.nextSetBit(0); j > 0; j = bs.nextSetBit(j + 1)) {
-            if (j <= i) bs.clear(j); 
-        }
-        return bs;
-    }
 
     /* ====================================== dataset loader ========================================================*/
-
     public void loadData(String inputfile) throws IOException {
         State  p,q;
         IState current_root = wNFAStartState;
@@ -84,7 +60,7 @@ public class WAutomaton {
         StateStack.push(wNFAStartState);
         HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
-        BitSet currentItems = new BitSet(),fItems = new BitSet();  /* bitset of the frequent items (the set F1) */
+        BitSet currentItems = new BitSet();  /* bitset of the frequent items (the set F1) */
         HashMap<Integer,ArrayList<State>> lStates = new HashMap<Integer,ArrayList<State>>();
         String transaction;
         long startTime = System.nanoTime();
@@ -170,30 +146,33 @@ public class WAutomaton {
             writer.write("Loading time: " + (endTime-startTime)/1000000 + " ms\n");
             System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
             System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
-            /*  ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
+            /* ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
             // set the start and end code values for the states of the NFA
             codage(wNFAStartState);
             // add the transition from wDFAStartState by the itemsetdelimiter  (-1 here)
-            DfaState s = new DfaState(itemsetDelimiter);
+            DfaState s = new DfaState();
             for (State d:lStates.get(itemsetDelimiter)){
                 s.addState(d);
             }
+            s.getFollow().and(fItems);
             wDFAStartState.addTransition(itemsetDelimiter, s);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
-                s = new DfaState(i);
+                s = new DfaState();
                 s.setSupport(alphabet.get(i));
                 for (State d:lStates.get(i)){
                     s.addState(d);
                 }
                 wDFAStartState.addTransition(i, s);
-                s.setPattern(i); 
+                s.setPattern(i);
                 DFAqueue.add(s);
                 nbFreqSequences++;
                 DfaState r = s.delta(itemsetDelimiter);
+                r.getFollow().and(fItems);
                 DFAqueue.add(r);
-                System.out.println(0+" => "+i+" = "+s+": "+r.getPattern() +" fréquent: "+r.getSupport());
+                System.out.println(r.getPattern() +" : "+r.getSupport());
             }
+            wNFAStates = null;
         }    
 
     public void Determinize() {
@@ -205,25 +184,10 @@ public class WAutomaton {
                 DfaState r2 = r1.delta(itemsetDelimiter);
                 int sprt = r2.getSupport();
                 if (sprt >= min_supp) {
-                    BitSet bs1 = r1.listStateBits();
-                    BitSet bs2 = r2.listStateBits();
-                    if (!DFAStateMap.containsKey(bs1)){
-                        DFAs newDFAState1 = new DFAs(bs1,sprt);
-                        DFAs newDFAState2 = new DFAs(bs2,sprt);
-                        newDFAState1.next.put(itemsetDelimiter, newDFAState2);
-                        DFAStateMap.put(bs1, newDFAState1);
-                        DFAStateMap.put(bs2, newDFAState2);
-                        DFAStateMap.put(s.listStateBits(), new DFAs(s.listStateBits(),s.getSupport()));
-                        DFAStateMap.get(s.listStateBits()).next.put(i, newDFAState1);
-                        //System.out.println(s+" => "+i+" = "+r1+": "+r2.getPattern() +"fréquent\n");
-                        System.out.println(s+" => "+i+" = "+r1+": "+r2.getPattern() +" fréquent: "+sprt);
-                        nbFreqSequences++;
-
-                        if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
-                        if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);
-                    } else {
-                        DFAStateMap.get(bs1).listFrom(r1.getPattern());                     
-                    }
+                    System.out.println(r2.getPattern() +" : "+sprt);
+                    nbFreqSequences++;
+                    if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
+                    if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);
                 }
             } 
         }
@@ -235,8 +199,6 @@ public class WAutomaton {
         automate.loadData(args[1]);                                         // input file
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
-        //automate.codage(wNFAStartState);
-        //System.out.println(wDFAStartState.getTransitions().get(1).delta(3));
         automate.Determinize(); 
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);

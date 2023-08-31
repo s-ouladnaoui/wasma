@@ -32,9 +32,7 @@ import java.util.*;
     public void setEnd(int e) { end = e; }
 
     public String toString() {
-        return //" ( "+ //getType()+", "+getStart()+", "+getEnd()+" )" ;
-               ((Integer) WAutomaton.wNFAStates.indexOf(this)).toString();
-                //+" )";
+        return (((Integer)getStart()).toString());
     }
 
     public int compareTo(State t)

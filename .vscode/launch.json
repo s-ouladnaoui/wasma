@@ -4,14 +4,21 @@
     // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-       
         {
             "type": "java",
             "name": "Launch WAutomaton",
             "request": "launch",
             "mainClass": "WAutomaton",
             "projectName": "",
-            "args": "1 ../in.txt res"
+            "args": "2 ../in.txt res"
+        },
+        {
+            "type": "java",
+            "name": "Launch WAutomaton 2",
+            "request": "launch",
+            "mainClass": "WAutomaton",
+            "projectName": "test",
+            "args": "378 ../data.txt res"
         }
     ]
 }

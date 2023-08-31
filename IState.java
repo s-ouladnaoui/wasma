@@ -37,10 +37,4 @@ public class IState extends State {
     public void setFollow(BitSet b){
         follow.or(b);
     }
-
-    public String toString() {
-        return //" ( "+ getType()+" : "//+getStart()+", "+getEnd()+"; w = "+getWeight() //+
-        //" follow: "+follow+" prior: "+prior
-        ((Integer)WAutomaton.wNFAStates.indexOf(this)).toString();
-    }
 }

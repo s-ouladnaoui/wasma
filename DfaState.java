@@ -5,15 +5,13 @@ import java.util.TreeSet;
 import java.util.Iterator;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
-    int item;
     ArrayList<Integer> pattern; 
     HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
     HashMap<Integer,DfaState> transitions;   // the set of DFA transitions from this state by item
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
-    public DfaState(int i){
-        item = i;
+    public DfaState(){
         states = new HashMap<IState,TreeSet<State>>();
         transitions = new HashMap<Integer,DfaState>();
         follow = new BitSet(); 
@@ -21,11 +19,7 @@ public class DfaState {
     }
 
     public int getItem(){
-        return item;
-    }
-
-    public void setItem(int i){
-        item = i;
+        return pattern.get(pattern.size()-1);
     }
 
     public ArrayList<Integer> getPattern() {
@@ -46,16 +40,9 @@ public class DfaState {
 
     public TreeSet<State> listStates(){
         TreeSet<State> r = new TreeSet<State>();
-        for (IState rt: this.getStates().keySet() ){
-            r.addAll(getStates(rt));
-        }
-        return r;
-    }
-
-    public BitSet listStateBits() {
-        BitSet r = new BitSet(listStates().size());
-        for (State s:listStates()){
-            r.set(WAutomaton.wNFAStates.indexOf(s));
+        if (this.states.isEmpty()) return r;
+        for (IState rt: this.getStates().keySet() ){       
+            r.addAll(getStates(rt));      
         }
         return r;
     }
@@ -69,6 +56,12 @@ public class DfaState {
             states.put(s.getRoot(), ss);
         }
         if (s.getType()) this.setFollow(((IState) s).getFollow());
+    }
+
+    public void removeState(State s) {
+        if (states.containsKey(s.getRoot())) {
+            states.get(s.getRoot()).remove(s);
+        }
     }
 
     public int getSupport(){
@@ -95,13 +88,32 @@ public class DfaState {
         transitions.put(i, s);
     }
 
-    // compute the support of a set of IStates and collect the local next items in bs
-    public static int evalSupport(BitSet bs,Iterator<State> it) {
+    // for reachability between two sets of states align them and check the descendance relation 
+
+    private void Align(Iterator<State> xit, Iterator<State> yit) {
+        State x = xit.next();
+        State y = yit.next();
+        do {
+            if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
+            else if (y.getEnd() < x.getStart() || x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) { if (yit.hasNext()) y = yit.next(); else break;}
+            else {
+                this.addState(y);
+                if (yit.hasNext()) y = yit.next(); else break;
+            }
+        } while (true);
+        this.getFollow().and(WAutomaton.fItems);
+    }
+
+    // compute the support of a set of IStates and collect the local next items in bs. A state that doesn't contribute 
+    // to further extension is removed also from the stateset
+    private int evalSupport(BitSet bs) {
+        Iterator<State> it = this.listStates().iterator();
         int sprt = 0;
         if (!it.hasNext()) return 0;
         State ref = it.next(),s;
         bs.or(((IState) ref).getPrior());
         sprt += ((IState) ref).getWeight();
+        if (((IState) ref).getFollow().isEmpty()) this.removeState(ref);
         while (it.hasNext()){
             s = (State) it.next();
             bs.or(((IState) s).getPrior());
@@ -109,40 +121,49 @@ public class DfaState {
                 ref = s;
                 sprt += ((IState) ref).getWeight();
             }      
+            if (((IState) s).getFollow().isEmpty()) this.removeState(s);
         }
+        bs.and(WAutomaton.fItems);
         return sprt;
     } 
 
+    // clear already processed local next items 
+    public BitSet clearBs(BitSet bs) {
+        int i = this.getItem();
+        for (int j = bs.nextSetBit(0); j > 0; j = bs.nextSetBit(j + 1)) {
+            if (j <= i) bs.clear(j); 
+        }
+        return bs;
+    }    
+
     public DfaState delta(int a) {
-        DfaState res = new DfaState(a);    // res_a = delta(this,a)
-        BitSet pr = new BitSet();       // local next items for subsequent (itemset) extensions
+        DfaState res = new DfaState();     // res_a = delta(this,a)
+        BitSet pr = new BitSet();           // local next items for subsequent (itemset) extensions
         ArrayList<Integer> p = new ArrayList<>(this.getPattern());
         p.add(a); 
         res.pattern = p;
         if (a == WAutomaton.itemsetDelimiter)  {
             for (IState r: getStates().keySet() ){
-                WAutomaton.Align(getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator(),res,  false);            
+                res.Align(this.getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator());            
             }
-        int sprt = evalSupport(pr, res.listStates().iterator());
-        res.setSupport(sprt);
-        this.setFollow(WAutomaton.clearBs(pr, this.getItem()));
-        return res;
+        res.setSupport(res.evalSupport(pr));
+        if (!pr.isEmpty()) this.setFollow(this.clearBs(pr));
         }
         else {
             if (this.getItem() == WAutomaton.itemsetDelimiter) {
-                WAutomaton.Align(listStates().iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).listStates().iterator(),res,  false);       
+                res.Align(this.listStates().iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).listStates().iterator());     
             } else {
                 for (IState r: getStates().keySet() ){
                     if (!WAutomaton.wDFAStartState.getTransitions().get(a).getStates().containsKey(r)) continue;
-                    WAutomaton.Align(getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator(),res,  false);
+                    res.Align(this.getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator());
                 }  
             }
-            return res;
         }
+        return res;
     }
     
     public String toString(){
-        return (listStates().toString());//+" Supp: "+getSupport()); 
+        return (listStates().toString());
     }
 }
 
