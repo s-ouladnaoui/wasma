@@ -155,6 +155,7 @@ public class WAutomaton {
                 s.addState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
+            s.setRoot(wDFAStartState);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState();
@@ -163,11 +164,14 @@ public class WAutomaton {
                     s.addState(d);
                 }
                 wDFAStartState.addTransition(i, s);
+                s.setRoot(wDFAStartState);
                 s.setPattern(i);
                 DFAqueue.add(s);
-                DfaState r = s.delta(itemsetDelimiter);
+                DfaState r = s.delta(itemsetDelimiter,wDFAStartState);
+                r.setRoot(wDFAStartState);
                 r.setPattern(s.getItem());
                 r.setPattern(itemsetDelimiter);
+                s.addTransition(itemsetDelimiter, r);
                 System.out.println(r.getPattern() +" : "+r.getSupport());
                 DFAqueue.add(r);
                 nbFreqSequences++;
@@ -180,14 +184,19 @@ public class WAutomaton {
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                DfaState r1 = s.delta(i);
+                DfaState r1 = s.delta(i,s);
+                s.addTransition(i, r1);
                 r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
                 r1.setPattern(i);
-                DfaState r2 = r1.delta(itemsetDelimiter);
+                if (s.getItem() == itemsetDelimiter) r1.setRoot(s);
+                else r1.setRoot(s.getRoot());
+                DfaState r2 = r1.delta(itemsetDelimiter,s);
                 int sprt = r2.getSupport();
                 if (sprt >= min_supp) {
+                    r2.setRoot(r1.getRoot());
                     r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
                     r2.setPattern(itemsetDelimiter);
+                    r1.addTransition(itemsetDelimiter,r2);
                     System.out.println(r2.getPattern() +" : "+sprt);
                     nbFreqSequences++;
                     if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
