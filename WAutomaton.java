@@ -9,7 +9,6 @@ public class WAutomaton {
     static IState wNFAStartState;                         /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
     static BitSet fItems = new BitSet();
-
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
@@ -85,6 +84,7 @@ public class WAutomaton {
                             Integer f = alphabet.get(k);
                             if (f == null) {
                                 alphabet.put(k, 1);
+                                if (min_supp == 1) fItems.set(k);  
                             } else {
                                 alphabet.put(k, f + 1);
                                 tmp = f + 1;
@@ -154,7 +154,6 @@ public class WAutomaton {
             for (State d:lStates.get(itemsetDelimiter)){
                 s.addState(d);
             }
-            s.getFollow().and(fItems);
             wDFAStartState.addTransition(itemsetDelimiter, s);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
@@ -166,11 +165,12 @@ public class WAutomaton {
                 wDFAStartState.addTransition(i, s);
                 s.setPattern(i);
                 DFAqueue.add(s);
-                nbFreqSequences++;
                 DfaState r = s.delta(itemsetDelimiter);
-                r.getFollow().and(fItems);
-                DFAqueue.add(r);
+                r.setPattern(s.getItem());
+                r.setPattern(itemsetDelimiter);
                 System.out.println(r.getPattern() +" : "+r.getSupport());
+                DFAqueue.add(r);
+                nbFreqSequences++;
             }
             wNFAStates = null;
         }    
@@ -181,9 +181,13 @@ public class WAutomaton {
             s = DFAqueue.remove();
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
                 DfaState r1 = s.delta(i);
+                r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
+                r1.setPattern(i);
                 DfaState r2 = r1.delta(itemsetDelimiter);
                 int sprt = r2.getSupport();
                 if (sprt >= min_supp) {
+                    r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
+                    r2.setPattern(itemsetDelimiter);
                     System.out.println(r2.getPattern() +" : "+sprt);
                     nbFreqSequences++;
                     if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);

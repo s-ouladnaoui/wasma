@@ -40,7 +40,6 @@ public class DfaState {
 
     public TreeSet<State> listStates(){
         TreeSet<State> r = new TreeSet<State>();
-        if (this.states.isEmpty()) return r;
         for (IState rt: this.getStates().keySet() ){       
             r.addAll(getStates(rt));      
         }
@@ -88,6 +87,19 @@ public class DfaState {
         transitions.put(i, s);
     }
 
+    /*public Iterator<State> clean(Iterator<State> it) {
+        State ref = it.next(),s;
+        while (it.hasNext()){
+            s = (State) it.next();
+            if (s.getStart() > ref.getEnd()) {
+                ref = s;
+            } else {
+                it.remove();
+            }      
+        }
+        return it;
+    }*/
+
     // for reachability between two sets of states align them and check the descendance relation 
 
     private void Align(Iterator<State> xit, Iterator<State> yit) {
@@ -95,13 +107,15 @@ public class DfaState {
         State y = yit.next();
         do {
             if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
-            else if (y.getEnd() < x.getStart() || x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) { if (yit.hasNext()) y = yit.next(); else break;}
-            else {
-                this.addState(y);
-                if (yit.hasNext()) y = yit.next(); else break;
-            }
-        } while (true);
-        this.getFollow().and(WAutomaton.fItems);
+            else if (y.getEnd() < x.getStart() ||
+                     x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) 
+                        { if (yit.hasNext()) y = yit.next(); else break;}
+                else {
+                    this.addState(y);
+                    if (yit.hasNext()) y = yit.next(); else break;
+                }
+            } while (true);
+            this.getFollow().and(WAutomaton.fItems);
     }
 
     // compute the support of a set of IStates and collect the local next items in bs. A state that doesn't contribute 
@@ -137,11 +151,9 @@ public class DfaState {
     }    
 
     public DfaState delta(int a) {
-        DfaState res = new DfaState();     // res_a = delta(this,a)
-        BitSet pr = new BitSet();           // local next items for subsequent (itemset) extensions
-        ArrayList<Integer> p = new ArrayList<>(this.getPattern());
-        p.add(a); 
-        res.pattern = p;
+        //System.out.print(this+ " "+a+" = ");
+        DfaState res = new DfaState();                          // res_a = delta(this,a)
+        BitSet pr = new BitSet();                               // local next items for subsequent (itemset) extensions
         if (a == WAutomaton.itemsetDelimiter)  {
             for (IState r: getStates().keySet() ){
                 res.Align(this.getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator());            
@@ -159,6 +171,7 @@ public class DfaState {
                 }  
             }
         }
+        //System.out.println(res);
         return res;
     }
     

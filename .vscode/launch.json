@@ -12,13 +12,13 @@
             "projectName": "",
             "args": "2 ../in.txt res"
         },
-        {
+        /*{
             "type": "java",
-            "name": "Launch WAutomaton 2",
+            "name": "Launch WAutomaton",
             "request": "launch",
             "mainClass": "WAutomaton",
-            "projectName": "test",
-            "args": "378 ../data.txt res"
-        }
+            "projectName": "",
+            "args": "370 ../data.txt res"
+        }*/
     ]
 }
