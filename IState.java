@@ -3,23 +3,12 @@ import java.util.BitSet;
 // extended version of the State class for itemsetdelimiter states
 
 public class IState extends State {
-
-    public BitSet prior, follow;          /* The set of local previous and global next items */
-    public int weight;                    /* as usually: the frequency(or weight) of the prefix from the root to this state */
-
+    BitSet prior, follow;          /* The set of local previous and global next items */
+    
     public IState () {
         super(true);
         prior = new BitSet(); 
         follow = new BitSet();
-        weight = 0;
-    }
-    
-    public int getWeight(){
-        return weight;
-    }
-
-    public void setWeight(int w){
-        weight += w;
     }
     
     public BitSet getPrior(){

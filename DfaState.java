@@ -89,18 +89,6 @@ public class DfaState {
         transitions.put(i, s);
     }
 
-    /*public Iterator<State> clean(Iterator<State> it) {
-        State ref = it.next(),s;
-        while (it.hasNext()){
-            s = (State) it.next();
-            if (s.getStart() > ref.getEnd()) {
-                ref = s;
-            } else {
-                it.remove();
-            }      
-        }
-        return it;
-    }*/
     public DfaState getRoot(){
         return root;
     }
@@ -109,22 +97,21 @@ public class DfaState {
         root = r;
     }
 
-    static public TreeSet<State> trim(TreeSet<State> l) {
-        if (l.size() <= 1) return l;
-        TreeSet<State> r = new TreeSet<>();
-        Iterator<State> it = l.iterator();
+    public String toString(){
+        return (listStates().toString());
+    }
+    
+    public DfaState trim() {
+        if (listStates().size() <= 1) return this ;
+        Iterator<State> it = listStates().iterator();
         State ref = it.next(),s;
-        //if (((IState) ref).getFollow().isEmpty()) l.remove(ref);
-        //else 
-        r.add(ref);
         while (it.hasNext()){
             s = (State) it.next();
-            if (s.getStart() > ref.getEnd() && !((IState)s).getFollow().isEmpty()) {
+            if (s.getStart() > ref.getEnd()) {
                 ref = s;
-                r.add(ref);
-            }      
+            } else removeState(s);      
         }
-        return r;
+        return this;
     }
 
     // for reachability between two sets of states align them and check the descendance relation 
@@ -133,9 +120,6 @@ public class DfaState {
         State x = xit.next();
         State y = yit.next();
         do {
-            if (x == y) {
-            if (yit.hasNext()) y = yit.next(); else break;
-            }
             if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
             else if (y.getEnd() < x.getStart() ||
                      x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) 
@@ -145,27 +129,25 @@ public class DfaState {
                     if (yit.hasNext()) y = yit.next(); else break;
                 }
             } while (true);
-            this.getFollow().and(WAutomaton.fItems);
+            //this.getFollow().and(WAutomaton.fItems);
     }
 
     // compute the support of a set of IStates and collect the local next items in bs. A state that doesn't contribute 
     // to further extension is removed also from the stateset
-    private int evalSupport(BitSet bs) {
+    private int evalSupport(BitSet bs, boolean target) {
         Iterator<State> it = this.listStates().iterator();
-        int sprt = 0;
         if (!it.hasNext()) return 0;
+        int sprt = 0;
         State ref = it.next(),s;
-        bs.or(((IState) ref).getPrior());
-        sprt += ((IState) ref).getWeight();
-        //if (((IState) ref).getFollow().isEmpty()) this.removeState(ref);
+        if (target) bs.or(((IState) ref).getPrior());
+        else sprt += ref.getWeight();
         while (it.hasNext()){
             s = (State) it.next();
-            bs.or(((IState) s).getPrior());
+            if (target) bs.or(((IState) s).getPrior());
             if (s.getStart() > ref.getEnd()) {
                 ref = s;
-                sprt += ((IState) ref).getWeight();
-            }      
-           // if (((IState) s).getFollow().isEmpty()) this.removeState(s);
+                if (!target) sprt += ref.getWeight();
+            }  
         }
         bs.and(WAutomaton.fItems);
         return sprt;
@@ -190,25 +172,21 @@ public class DfaState {
                     res.Align(this.getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator());            
                 else res.Align(this.getStates(r).iterator(), ref.getTransitions().get(a).getStates(r).iterator());            
             }
-        res.setSupport(res.evalSupport(pr));
+        res.evalSupport(pr,true);
         if (!pr.isEmpty()) this.setFollow(this.clearBs(pr));
         }
         else {
-            if (this.getItem() == WAutomaton.itemsetDelimiter) {
-                res.Align(trim(this.listStates()).iterator(), this.root.getTransitions().get(a).listStates().iterator());     
+            if (this.getItem() == WAutomaton.itemsetDelimiter ) {
+                if (this.getRoot().getTransitions().containsKey(a)) res.Align(this.trim().listStates().iterator(), this.getRoot().getTransitions().get(a).listStates().iterator());     
             } else {
                 for (IState r: getStates().keySet() ){
-                    if (!this.root.getTransitions().get(a).getStates().containsKey(r)) continue;
-                    res.Align(this.getStates(r).iterator(), this.root.getTransitions().get(a).getStates(r).iterator());
+                    if (!this.getRoot().getTransitions().get(a).getStates().containsKey(r)) continue;
+                    res.Align(this.getStates(r).iterator(), this.getRoot().getTransitions().get(a).getStates(r).iterator());
                 }  
             }
+            res.setSupport(res.evalSupport(pr,false));
         }
-        //System.out.println(res);
         return res;
-    }
-    
-    public String toString(){
-        return (listStates().toString());
     }
 }
 

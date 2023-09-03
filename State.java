@@ -1,14 +1,25 @@
 import java.util.*;
+    
 /* Weighted Automaton State Class */
+    
     public class State implements Comparable<State> {
-    boolean type;                                  /* flag : the state is an itemset delimiter */
-    final HashMap<Integer,State> transitions;      /* Immediate transition list */
-    private int start, end;                        /* codes for reachability (descendence) queries */
-    IState root;                /* the root of the subtree: the begining of the itemset that contains this state */
+    boolean type;                                    /* flag : the state is an itemset delimiter */
+    HashMap<Integer,State> transitions;              /* Immediate transition list */
+    int start, end;                                  /* codes for reachability (descendence) queries */
+    int weight ;                                     /* the frequency of the prefix from the startstate to this state */ 
+    IState root;                                     /* the root of the subtree: the begining of the itemset that contains this state */
     
     public State(boolean stateType) {
         type = stateType;
         transitions = new HashMap<>();
+        weight = 0;
+    }
+    public int getWeight(){
+        return weight;
+    }
+
+    public void setWeight(int w){
+        weight += w;
     }
 
     public boolean getType() { return type;}

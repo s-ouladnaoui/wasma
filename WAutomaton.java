@@ -123,12 +123,14 @@ public class WAutomaton {
                         currentItems.set(item);         // set the bit of the item 
                         if (p.getTransitions().containsKey(item)) {
                             q = p.getTransitions().get(item);
+                            q.setWeight(1);
                         } else {
                             ++NbState;
                             q = new State(false);
                             wNFAStates.add(q);
                             p.addTransition(item, q);
                             q.setRoot(current_root);
+                            q.setWeight(1);
                             if (lStates.containsKey(item)) lStates.get(item).add(q);
                             else {
                                 ArrayList<State> r = new ArrayList<State>();
@@ -168,11 +170,12 @@ public class WAutomaton {
                 s.setPattern(i);
                 DFAqueue.add(s);
                 DfaState r = s.delta(itemsetDelimiter,wDFAStartState);
+               // r.setSupport(s.getSupport());
                 r.setRoot(wDFAStartState);
                 r.setPattern(s.getItem());
                 r.setPattern(itemsetDelimiter);
-                s.addTransition(itemsetDelimiter, r);
-                System.out.println(r.getPattern() +" : "+r.getSupport());
+                //s.addTransition(itemsetDelimiter, r);
+                System.out.println(r.getPattern() +" : "+s.getSupport());
                 DFAqueue.add(r);
                 nbFreqSequences++;
             }
@@ -183,21 +186,21 @@ public class WAutomaton {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
+            if (s.getItem() == itemsetDelimiter) s = s.trim();      // in this case: avoid redondance in computation of delta(s,i)
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
                 DfaState r1 = s.delta(i,s);
-                s.addTransition(i, r1);
-                r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
-                r1.setPattern(i);
-                if (s.getItem() == itemsetDelimiter) r1.setRoot(s);
-                else r1.setRoot(s.getRoot());
-                DfaState r2 = r1.delta(itemsetDelimiter,s);
-                int sprt = r2.getSupport();
-                if (sprt >= min_supp) {
+                if (r1.getSupport() >= min_supp) {
+                    s.addTransition(i, r1);
+                    r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
+                    r1.setPattern(i);
+                    if (s.getItem() == itemsetDelimiter) r1.setRoot(s);
+                    else r1.setRoot(s.getRoot());
+                    DfaState r2 = r1.delta(itemsetDelimiter,s);
                     r2.setRoot(r1.getRoot());
                     r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
                     r2.setPattern(itemsetDelimiter);
-                    r1.addTransition(itemsetDelimiter,r2);
-                    System.out.println(r2.getPattern() +" : "+sprt);
+                    //r1.addTransition(itemsetDelimiter,r2);
+                    System.out.println(r2.getPattern() +" : "+r1.getSupport());
                     nbFreqSequences++;
                     if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
                     if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);
@@ -213,9 +216,9 @@ public class WAutomaton {
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
         automate.Determinize(); 
+        String endTime = String.format("%.2f ms",(System.nanoTime()-startTime)/1000000d);
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
-        String endTime = String.format("%.2f ms",(System.nanoTime()-startTime)/1000000d);
         automate.writer.write("Min Supp: " + min_supp + "\nNb Frequent Sequences : " + WAutomaton.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
         System.out.println("Min Supp: " + min_supp + "\nNb Frequent Sequences: " + WAutomaton.nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem);
         automate.writer.close();
