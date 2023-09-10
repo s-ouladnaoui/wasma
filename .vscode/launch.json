@@ -11,14 +11,6 @@
             "mainClass": "WAutomaton",
             "projectName": "",
             "args": "2 ../in.txt res"
-        },
-        /*{
-            "type": "java",
-            "name": "Launch WAutomaton",
-            "request": "launch",
-            "mainClass": "WAutomaton",
-            "projectName": "",
-            "args": "370 ../data.txt res"
-        }*/
+        }
     ]
 }

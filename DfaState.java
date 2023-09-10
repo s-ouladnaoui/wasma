@@ -6,21 +6,20 @@ import java.util.Iterator;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
     ArrayList<Integer> pattern; 
-    HashMap<IState,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
+    HashMap<State,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
     HashMap<Integer,DfaState> transitions;   // the set of DFA transitions from this state by item
     DfaState root;
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
     public DfaState(){
-        states = new HashMap<IState,TreeSet<State>>();
+        states = new HashMap<State,TreeSet<State>>();
         transitions = new HashMap<Integer,DfaState>();
         follow = new BitSet(); 
         pattern =  new ArrayList<Integer>();
-        root = null;
     }
 
-    public int getItem(){
+    public int getItem() {
         return pattern.get(pattern.size()-1);
     }
 
@@ -28,21 +27,21 @@ public class DfaState {
         return pattern;
     }
 
-    public void setPattern(int i) {
+    public void extendPattern(int i) {
         pattern.add(i);
     }
 
-    public HashMap<IState,TreeSet<State>> getStates(){
+    public HashMap<State,TreeSet<State>> getStates(){
         return states;
     }
 
-    public TreeSet<State> getStates(IState r){
+    public TreeSet<State> getStates(State r){
         return states.get(r);
     }
 
     public TreeSet<State> listStates(){
         TreeSet<State> r = new TreeSet<State>();
-        for (IState rt: this.getStates().keySet() ){       
+        for (State rt: this.getStates().keySet() ){       
             r.addAll(getStates(rt));      
         }
         return r;
@@ -51,18 +50,12 @@ public class DfaState {
     public void addState(State s){
         if (states.containsKey(s.getRoot())) {
             states.get(s.getRoot()).add(s);
-        }else {
+        } else {
             TreeSet<State> ss = new TreeSet<State>();
             ss.add(s);
             states.put(s.getRoot(), ss);
         }
-        if (s.getType()) this.setFollow(((IState) s).getFollow());
-    }
-
-    public void removeState(State s) {
-        if (states.containsKey(s.getRoot())) {
-            states.get(s.getRoot()).remove(s);
-        }
+        this.setFollow(s.getFollow());
     }
 
     public int getSupport(){
@@ -100,93 +93,54 @@ public class DfaState {
     public String toString(){
         return (listStates().toString());
     }
-    
-    public DfaState trim() {
-        if (listStates().size() <= 1) return this ;
-        Iterator<State> it = listStates().iterator();
-        State ref = it.next(),s;
-        while (it.hasNext()){
-            s = (State) it.next();
-            if (s.getStart() > ref.getEnd()) {
-                ref = s;
-            } else removeState(s);      
-        }
-        return this;
-    }
 
     // for reachability between two sets of states align them and check the descendance relation 
-
-    public void Align(Iterator<State> xit, Iterator<State> yit) {
+    public void Align(Iterator<State> xit, Iterator<State> yit, boolean flag) {
         State x = xit.next();
+        State ref1 = x;
         State y = yit.next();
+        State ref2 = y;
+        boolean first = true;
+        int sprt = 0;
         do {
-            if (x.getEnd() < y.getStart())  { if (xit.hasNext()) x = xit.next(); else break;}
-            else if (y.getEnd() < x.getStart() ||
-                     x.getStart() > y.getStart() && x.getEnd() < y.getEnd()) 
-                        { if (yit.hasNext()) y = yit.next(); else break;}
-                else {
+            if (ref1.getEnd() < y.getStart())  { 
+                if (xit.hasNext()){
+                    if (!flag) ref1 = xit.next(); 
+                    else {
+                        while(x.getStart() < ref1.getEnd()) { if (xit.hasNext()) x = xit.next(); else break;}
+                        ref1 = x;
+                    }
+                } else break;
+            }
+            else if (y.getEnd() < ref1.getStart() || ref1.getStart() > y.getStart() && ref1.getEnd() < y.getEnd()) { 
+                if (yit.hasNext()) y = yit.next(); else break;
+            } else {
+                if (first ) {
+                    ref2 = y;
                     this.addState(y);
-                    if (yit.hasNext()) y = yit.next(); else break;
+                    sprt += y.getWeight();
+                    first = false;
+                } else {
+                    this.addState(y);
+                    if ( y.getStart() > ref2.getEnd()) {
+                    ref2 = y;
+                    sprt += y.getWeight();
                 }
-            } while (true);
-            //this.getFollow().and(WAutomaton.fItems);
+            }
+                if (yit.hasNext()) y = yit.next(); else break;
+            }
+        } while (true);
+        this.setSupport(sprt);
     }
 
-    // compute the support of a set of IStates and collect the local next items in bs. A state that doesn't contribute 
-    // to further extension is removed also from the stateset
-    private int evalSupport(BitSet bs, boolean target) {
-        Iterator<State> it = this.listStates().iterator();
-        if (!it.hasNext()) return 0;
-        int sprt = 0;
-        State ref = it.next(),s;
-        if (target) bs.or(((IState) ref).getPrior());
-        else sprt += ref.getWeight();
-        while (it.hasNext()){
-            s = (State) it.next();
-            if (target) bs.or(((IState) s).getPrior());
-            if (s.getStart() > ref.getEnd()) {
-                ref = s;
-                if (!target) sprt += ref.getWeight();
-            }  
-        }
-        bs.and(WAutomaton.fItems);
-        return sprt;
-    } 
-
-    // clear already processed local next items 
-    public BitSet clearBs(BitSet bs) {
-        int i = this.getItem();
-        for (int j = bs.nextSetBit(0); j > 0; j = bs.nextSetBit(j + 1)) {
-            if (j <= i) bs.clear(j); 
-        }
-        return bs;
-    }    
-
     public DfaState delta(int a, DfaState ref) {
-        //System.out.print(this+ " "+a+" = ");
-        DfaState res = new DfaState();                          // res_a = delta(this,a)
-        BitSet pr = new BitSet();                               // local next items for subsequent (itemset) extensions
-        if (a == WAutomaton.itemsetDelimiter)  {
-            for (IState r: getStates().keySet() ){
-                if (!ref.getTransitions().containsKey(WAutomaton.itemsetDelimiter)) 
-                    res.Align(this.getStates(r).iterator(), WAutomaton.wDFAStartState.getTransitions().get(a).getStates(r).iterator());            
-                else res.Align(this.getStates(r).iterator(), ref.getTransitions().get(a).getStates(r).iterator());            
-            }
-        res.evalSupport(pr,true);
-        if (!pr.isEmpty()) this.setFollow(this.clearBs(pr));
-        }
-        else {
-            if (this.getItem() == WAutomaton.itemsetDelimiter ) {
-                if (this.getRoot().getTransitions().containsKey(a)) res.Align(this.trim().listStates().iterator(), this.getRoot().getTransitions().get(a).listStates().iterator());     
-            } else {
-                for (IState r: getStates().keySet() ){
-                    if (!this.getRoot().getTransitions().get(a).getStates().containsKey(r)) continue;
-                    res.Align(this.getStates(r).iterator(), this.getRoot().getTransitions().get(a).getStates(r).iterator());
-                }  
-            }
-            res.setSupport(res.evalSupport(pr,false));
-        }
+        DfaState res = new DfaState();                          // res = delta(this,a)
+        if (this.getItem() == WAutomaton.itemsetDelimiter ) 
+            res.Align(this.listStates().iterator(),ref.getTransitions().get(a).listStates().iterator(),true);     
+        else 
+            for (State r: getStates().keySet() )
+            if (ref.getTransitions().containsKey(a) && ref.getTransitions().get(a).getStates().containsKey(r))
+            res.Align(this.getStates(r).iterator(),ref.getTransitions().get(a).getStates(r).iterator(),false);
         return res;
     }
 }
-

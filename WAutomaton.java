@@ -6,14 +6,15 @@ public class WAutomaton {
 
     static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
     static ArrayDeque<DfaState> DFAqueue;                 /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
-    static IState wNFAStartState;                         /* the initial state of the wnfa */
+    static State wNFAStartState;                         /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
-    static BitSet fItems = new BitSet();
+    static BitSet fItems = new BitSet();                  /* the set F1 of frequent items */  
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
+    //static final HashMap<DfaState,HashMap<Integer,DfaState>> delta = new HashMap<DfaState,HashMap<Integer,DfaState>>();
 
-    static int NbState = 0;                               /* number of states */
+    //static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
 
     static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
@@ -24,8 +25,8 @@ public class WAutomaton {
 
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
-        wNFAStates.add(wNFAStartState = new IState());        // the initial state of the weighted nfa
-        wDFAStartState = new DfaState();      // the initial state of the weighted dfa 0 is the item coressponding to epsilon
+        wNFAStates.add(wNFAStartState = new State(true));        // the initial state of the weighted nfa
+        wDFAStartState = new DfaState();                     // the initial state of the weighted dfa
         wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         DFAqueue = new ArrayDeque<DfaState>();
         min_supp = ms;
@@ -52,10 +53,10 @@ public class WAutomaton {
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
         State  p,q;
-        IState current_root = wNFAStartState;
+        State current_root = wNFAStartState;
         p = current_root;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
-        Stack<IState> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
+        Stack<State> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
         StateStack.push(wNFAStartState);
         HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
@@ -63,6 +64,7 @@ public class WAutomaton {
         HashMap<Integer,ArrayList<State>> lStates = new HashMap<Integer,ArrayList<State>>();
         String transaction;
         long startTime = System.nanoTime();
+        State x,y;
         while ((transaction = in.readLine()) != null)
         {
             String[] items = transaction.split(itemSeparator);
@@ -72,14 +74,26 @@ public class WAutomaton {
                     case transactionDelimiter:
                         NbTransactions++;
                         // This loop collect next items for each IState in a bottom up fashion 
-                        IState ss1 = StateStack.pop();
-                        while (!StateStack.isEmpty()){
-                            IState ss2 = StateStack.pop();
-                            ss2.setFollow(ss1.getFollow());
-                            ss2.setFollow(ss1.getPrior());
-                            ss1 = ss2;
+                        y = StateStack.pop();// the last state in the current sequence
+                        BitSet  lastAlphabet = new BitSet(),
+                                currentAlphabet = new BitSet();
+                        while (!StateStack.isEmpty()) {
+                            x = StateStack.pop();
+                            for (int k:y.getTransitions().keySet()) {
+                                if (k >= 0) currentAlphabet.set(k);
+                            }
+                            for (int k:x.getTransitions().keySet()) {
+                                if (k >= 0) currentAlphabet.set(k);
+                            }
+                            if (x.getType()) {
+                                lastAlphabet.or(currentAlphabet);
+                                x.setFollow(lastAlphabet);
+                                currentAlphabet.clear();
+                            } else{
+                                if (!y.getType()) x.setFollow(y.getFollow());
+                            }
+                            y = x;
                         }
-                        int tmp;
                         for (Integer k : members) {
                             Integer f = alphabet.get(k);
                             if (f == null) {
@@ -87,50 +101,23 @@ public class WAutomaton {
                                 if (min_supp == 1) fItems.set(k);  
                             } else {
                                 alphabet.put(k, f + 1);
-                                tmp = f + 1;
-                                if (!fItems.get(k) && tmp >= min_supp) fItems.set(k);
+                                if (!fItems.get(k) && f+1 >= min_supp) fItems.set(k);
                             }
                         }
-                        p = current_root = (IState) wNFAStartState;
+                        p = current_root =  wNFAStartState;
+                        StateStack.push(p);
                         members.clear();
                         break;
                     case itemsetDelimiter :
-                        IState qq; 
-                        if (p.getTransitions().containsKey(item)) {
-                            qq = (IState) p.getTransitions().get(item);
-                        } else {
-                            ++NbState;
-                            qq = new IState();
-                            wNFAStates.add(qq);
-                            p.addTransition(item, qq);
-                            qq.setRoot(current_root);
-                            if (lStates.containsKey(item)) lStates.get(item).add(qq);
-                            else {
-                                ArrayList<State> r = new ArrayList<State>();
-                                r.add(qq);
-                                lStates.put(item, r);
-                            }
-                        }
-                        qq.setWeight(1);
-                        qq.setPrior(currentItems);
-                        StateStack.push(qq);
-                        currentItems.clear();
-                        current_root = qq;
-                        p = qq;
-                        break;
-                    default:
-                        members.add(item);              // add the item to the alphabet
-                        currentItems.set(item);         // set the bit of the item 
+                        //IState q; 
                         if (p.getTransitions().containsKey(item)) {
                             q = p.getTransitions().get(item);
-                            q.setWeight(1);
                         } else {
-                            ++NbState;
-                            q = new State(false);
-                            wNFAStates.add(q);
+                           //++NbState;
+                            q = new State(true);
                             p.addTransition(item, q);
                             q.setRoot(current_root);
-                            q.setWeight(1);
+                            wNFAStates.add(q);
                             if (lStates.containsKey(item)) lStates.get(item).add(q);
                             else {
                                 ArrayList<State> r = new ArrayList<State>();
@@ -138,6 +125,32 @@ public class WAutomaton {
                                 lStates.put(item, r);
                             }
                         }
+                        q.setWeight(1);
+                        StateStack.push(q);
+                        currentItems.clear();
+                        current_root = q;
+                        p = q;
+                        break;
+                    default:
+                        members.add(item);              // add the item to the alphabet
+                        currentItems.set(item);         // set the item bit of the item 
+                        if (p.getTransitions().containsKey(item)) {
+                            q = p.getTransitions().get(item);
+                        } else {
+                            //++NbState;
+                            q = new State(false);
+                            p.addTransition(item, q);
+                            q.setRoot(current_root);
+                            wNFAStates.add(q);
+                            if (lStates.containsKey(item)) lStates.get(item).add(q);
+                            else {
+                                ArrayList<State> r = new ArrayList<State>();
+                                r.add(q);
+                                lStates.put(item, r);
+                            }
+                        }
+                        q.setWeight(1);
+                        StateStack.push(q);
                         p = q;
                     }
                 }
@@ -151,6 +164,8 @@ public class WAutomaton {
             /* ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
             // set the start and end code values for the states of the NFA
             codage(wNFAStartState);
+            wDFAStartState.setRoot(wDFAStartState);
+            wDFAStartState.extendPattern(itemsetDelimiter);
             // add the transition from wDFAStartState by the itemsetdelimiter  (-1 here)
             DfaState s = new DfaState();
             for (State d:lStates.get(itemsetDelimiter)){
@@ -167,15 +182,17 @@ public class WAutomaton {
                 }
                 wDFAStartState.addTransition(i, s);
                 s.setRoot(wDFAStartState);
-                s.setPattern(i);
+                s.extendPattern(i);
                 DFAqueue.add(s);
-                DfaState r = s.delta(itemsetDelimiter,wDFAStartState);
-               // r.setSupport(s.getSupport());
+                DfaState r = new DfaState();
+                for (State m: s.getStates().keySet()) {
+                    r.Align(s.getStates(m).iterator(), wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(m).iterator(),false);  
+                }
                 r.setRoot(wDFAStartState);
-                r.setPattern(s.getItem());
-                r.setPattern(itemsetDelimiter);
-                //s.addTransition(itemsetDelimiter, r);
-                System.out.println(r.getPattern() +" : "+s.getSupport());
+                r.extendPattern(s.getItem());
+                r.extendPattern(itemsetDelimiter);
+                s.addTransition(itemsetDelimiter, r);
+                System.out.println(nbFreqSequences+" => : "+r.getPattern() +" : "+s.getSupport());
                 DFAqueue.add(r);
                 nbFreqSequences++;
             }
@@ -186,26 +203,27 @@ public class WAutomaton {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
-            if (s.getItem() == itemsetDelimiter) s = s.trim();      // in this case: avoid redondance in computation of delta(s,i)
+            s.getFollow().and(fItems);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                DfaState r1 = s.delta(i,s);
-                if (r1.getSupport() >= min_supp) {
-                    s.addTransition(i, r1);
-                    r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
-                    r1.setPattern(i);
-                    if (s.getItem() == itemsetDelimiter) r1.setRoot(s);
-                    else r1.setRoot(s.getRoot());
-                    DfaState r2 = r1.delta(itemsetDelimiter,s);
-                    r2.setRoot(r1.getRoot());
-                    r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
-                    r2.setPattern(itemsetDelimiter);
-                    //r1.addTransition(itemsetDelimiter,r2);
-                    System.out.println(r2.getPattern() +" : "+r1.getSupport());
-                    nbFreqSequences++;
-                    if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
-                    if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);
+                if (s.getRoot().getTransitions().containsKey(i)){  // extend the state by i iff the root contains a transition by i 
+                    DfaState r1 = s.delta(i, s.getRoot());
+                    if (r1.getSupport() >= min_supp) {
+                        s.addTransition(i, r1);
+                        r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
+                        r1.extendPattern(i);
+                        r1.setRoot(s.getItem() == itemsetDelimiter ? s : s.getRoot());
+                        DfaState r2 = r1.delta(itemsetDelimiter, s.getItem() == itemsetDelimiter?s.getRoot().getTransitions().get(i):s);
+                        r2.setRoot(r1.getRoot());
+                        r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
+                        r2.extendPattern(itemsetDelimiter);
+                        r1.addTransition(itemsetDelimiter,r2);
+                        nbFreqSequences++;
+                        System.out.println(nbFreqSequences+" => : "+r2.getPattern() +" : "+r1.getSupport());
+                        if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
+                        if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);            
+                    }
                 }
-            } 
+            }
         }
     }
 
