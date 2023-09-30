@@ -172,7 +172,7 @@ public class WAutomaton {
                 s.addState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
-            s.setRoot(wDFAStartState);
+            //s.setRoot(wDFAStartState);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState();
@@ -186,13 +186,13 @@ public class WAutomaton {
                 DFAqueue.add(s);
                 DfaState r = new DfaState();
                 for (State m: s.getStates().keySet()) {
-                    r.Align(s.getStates(m).iterator(), wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(m).iterator(),false);  
+                    r.Align(s.getStates(m), wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(m),false);  
                 }
                 r.setRoot(wDFAStartState);
                 r.extendPattern(s.getItem());
                 r.extendPattern(itemsetDelimiter);
                 s.addTransition(itemsetDelimiter, r);
-                System.out.println(nbFreqSequences+" => : "+r.getPattern() +" : "+s.getSupport());
+                System.out.println(r.getPattern() +" : "+s.getSupport());
                 DFAqueue.add(r);
                 nbFreqSequences++;
             }

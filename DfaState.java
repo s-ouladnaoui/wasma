@@ -3,6 +3,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Iterator;
+import java.util.Set;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
     ArrayList<Integer> pattern; 
@@ -39,7 +40,7 @@ public class DfaState {
         return states.get(r);
     }
 
-    public TreeSet<State> listStates(){
+    public TreeSet<State> listStates() {
         TreeSet<State> r = new TreeSet<State>();
         for (State rt: this.getStates().keySet() ){       
             r.addAll(getStates(rt));      
@@ -95,7 +96,9 @@ public class DfaState {
     }
 
     // for reachability between two sets of states align them and check the descendance relation 
-    public void Align(Iterator<State> xit, Iterator<State> yit, boolean flag) {
+    public void Align(Set<State> s, Set<State> r, boolean flag) {
+        Iterator<State> xit = s.iterator();
+        Iterator<State> yit = r.iterator();
         State x = xit.next();
         State ref1 = x;
         State y = yit.next();
@@ -136,11 +139,11 @@ public class DfaState {
     public DfaState delta(int a, DfaState ref) {
         DfaState res = new DfaState();                          // res = delta(this,a)
         if (this.getItem() == WAutomaton.itemsetDelimiter ) 
-            res.Align(this.listStates().iterator(),ref.getTransitions().get(a).listStates().iterator(),true);     
+            res.Align(this.listStates(),ref.getTransitions().get(a).listStates(),true);     
         else 
             for (State r: getStates().keySet() )
             if (ref.getTransitions().containsKey(a) && ref.getTransitions().get(a).getStates().containsKey(r))
-            res.Align(this.getStates(r).iterator(),ref.getTransitions().get(a).getStates(r).iterator(),false);
+            res.Align(this.getStates(r),ref.getTransitions().get(a).getStates(r),false);
         return res;
     }
 }
