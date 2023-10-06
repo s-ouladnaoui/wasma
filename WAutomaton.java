@@ -12,16 +12,11 @@ public class WAutomaton {
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
-    //static final HashMap<DfaState,HashMap<Integer,DfaState>> delta = new HashMap<DfaState,HashMap<Integer,DfaState>>();
-
-    //static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
-
     static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
     int NbTransactions = 0;                                /* number of transactions */
     BufferedWriter writer ;                               /* for output */
-
 
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
@@ -109,11 +104,9 @@ public class WAutomaton {
                         members.clear();
                         break;
                     case itemsetDelimiter :
-                        //IState q; 
                         if (p.getTransitions().containsKey(item)) {
                             q = p.getTransitions().get(item);
                         } else {
-                           //++NbState;
                             q = new State(true);
                             p.addTransition(item, q);
                             q.setRoot(current_root);
@@ -137,7 +130,6 @@ public class WAutomaton {
                         if (p.getTransitions().containsKey(item)) {
                             q = p.getTransitions().get(item);
                         } else {
-                            //++NbState;
                             q = new State(false);
                             p.addTransition(item, q);
                             q.setRoot(current_root);
@@ -162,7 +154,7 @@ public class WAutomaton {
             System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
             System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
             /* ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
-            // set the start and end code values for the states of the NFA
+            // set the start and end code values for the states of the used in reachability cheking
             codage(wNFAStartState);
             wDFAStartState.setRoot(wDFAStartState);
             wDFAStartState.extendPattern(itemsetDelimiter);
@@ -172,8 +164,7 @@ public class WAutomaton {
                 s.addState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
-            //s.setRoot(wDFAStartState);
-            // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items
+            // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items (the F1 set) 
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState();
                 s.setSupport(alphabet.get(i));
@@ -186,7 +177,7 @@ public class WAutomaton {
                 DFAqueue.add(s);
                 DfaState r = new DfaState();
                 for (State m: s.getStates().keySet()) {
-                    r.Align(s.getStates(m), wDFAStartState.getTransitions().get(itemsetDelimiter).getStates(m),false);  
+                    r.Align(s, wDFAStartState.getTransitions().get(itemsetDelimiter),m);  
                 }
                 r.setRoot(wDFAStartState);
                 r.extendPattern(s.getItem());
@@ -196,6 +187,7 @@ public class WAutomaton {
                 DFAqueue.add(r);
                 nbFreqSequences++;
             }
+            // we don't need the NFA all the required information are in the first states of the DFA
             wNFAStates = null;
         }    
 
@@ -203,7 +195,7 @@ public class WAutomaton {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
-            s.getFollow().and(fItems);
+            //s.getFollow().and(fItems);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
                 if (s.getRoot().getTransitions().containsKey(i)){  // extend the state by i iff the root contains a transition by i 
                     DfaState r1 = s.delta(i, s.getRoot());

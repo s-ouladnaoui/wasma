@@ -1,6 +1,6 @@
 Database: ../kosarak25k.txt; Alphabet size: 14804; Database size: 25000
-Loading time: 2509 ms
+Loading time: 2174 ms
 Min Supp: 50
-Nb Frequent Sequences : 15679
-Mining time: 47821,36 ms
-Memory requirement: 744,79 mb
+Nb Frequent Sequences : 15681
+Mining time: 39911,40 ms
+Memory requirement: 753,84 mb

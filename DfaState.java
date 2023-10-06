@@ -3,7 +3,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
     ArrayList<Integer> pattern; 
@@ -47,7 +47,15 @@ public class DfaState {
         }
         return r;
     }
-    
+
+    public TreeSet<State> listStateRoots() {
+        TreeSet<State> r = new TreeSet<State>();
+        for (State rt: this.getStates().keySet() ){       
+            r.add(rt);      
+        }
+        return r;
+    }
+
     public void addState(State s){
         if (states.containsKey(s.getRoot())) {
             states.get(s.getRoot()).add(s);
@@ -57,6 +65,18 @@ public class DfaState {
             states.put(s.getRoot(), ss);
         }
         this.setFollow(s.getFollow());
+    }
+
+    public void addStates(State r){
+        for (State s: getStates(r)){
+            addState(s);
+        }
+    }
+
+    public void addStates(List<State> l){
+        for (State s: l){
+            addState(s);
+        }
     }
 
     public int getSupport(){
@@ -95,10 +115,10 @@ public class DfaState {
         return (listStates().toString());
     }
 
-    // for reachability between two sets of states align them and check the descendance relation 
-    public void Align(Set<State> s, Set<State> r, boolean flag) {
-        Iterator<State> xit = s.iterator();
-        Iterator<State> yit = r.iterator();
+    // Reachability between an itemsetdelimiter setstate and an item setstate 
+    public void Align(DfaState s, DfaState r) {
+        Iterator<State> xit = s.listStates().iterator();
+        Iterator<State> yit = r.listStateRoots().iterator();
         State x = xit.next();
         State ref1 = x;
         State y = yit.next();
@@ -108,11 +128,51 @@ public class DfaState {
         do {
             if (ref1.getEnd() < y.getStart())  { 
                 if (xit.hasNext()){
-                    if (!flag) ref1 = xit.next(); 
-                    else {
                         while(x.getStart() < ref1.getEnd()) { if (xit.hasNext()) x = xit.next(); else break;}
                         ref1 = x;
+                } else break;
+            }
+            else if (y.getEnd() < ref1.getStart() || ref1.getStart() > y.getStart() && ref1.getEnd() < y.getEnd()) { 
+                if (yit.hasNext()) y = yit.next(); else break;
+            } else {
+                if (first ) {
+                    ref2 = y;
+                    for (State m:r.getStates(y)){
+                        this.addState(m);
+                        sprt += m.getWeight();
                     }
+                    first = false;
+                } else {
+                    for (State m:r.getStates(y)){
+                        this.addState(m);
+                        sprt += m.getWeight();
+                    }
+                    if ( y.getStart() > ref2.getEnd()) {
+                    ref2 = y;
+                }
+            }
+                if (yit.hasNext()) y = yit.next(); else break;
+            }
+        } while (true);
+        this.setSupport(sprt);
+    }
+
+    // for reachability between two sets of states align them and check the descendance relation 
+    // 2 cases : between item setstate and an itmesetdelimiter setstate
+    // or        between 2 items setstates   
+    public void Align(DfaState s, DfaState r, State m) {
+        Iterator<State> xit = s.getStates(m).iterator();
+        Iterator<State> yit = r.getStates(m).iterator();
+        State x = xit.next();
+        State ref1 = x;
+        State y = yit.next();
+        State ref2 = y;
+        boolean first = true;
+        int sprt = 0;
+        do {
+            if (ref1.getEnd() < y.getStart())  { 
+                if (xit.hasNext()){
+                    ref1 = xit.next(); 
                 } else break;
             }
             else if (y.getEnd() < ref1.getStart() || ref1.getStart() > y.getStart() && ref1.getEnd() < y.getEnd()) { 
@@ -139,11 +199,11 @@ public class DfaState {
     public DfaState delta(int a, DfaState ref) {
         DfaState res = new DfaState();                          // res = delta(this,a)
         if (this.getItem() == WAutomaton.itemsetDelimiter ) 
-            res.Align(this.listStates(),ref.getTransitions().get(a).listStates(),true);     
+            res.Align(this,ref.getTransitions().get(a));     
         else 
             for (State r: getStates().keySet() )
-            if (ref.getTransitions().containsKey(a) && ref.getTransitions().get(a).getStates().containsKey(r))
-            res.Align(this.getStates(r),ref.getTransitions().get(a).getStates(r),false);
+                if (ref.getTransitions().get(a).getStates().containsKey(r))
+                    res.Align(this,ref.getTransitions().get(a),r);
         return res;
     }
 }
