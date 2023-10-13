@@ -12,11 +12,16 @@ public class WAutomaton {
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
+    //static final HashMap<DfaState,HashMap<Integer,DfaState>> delta = new HashMap<DfaState,HashMap<Integer,DfaState>>();
+
+    //static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
+
     static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
     int NbTransactions = 0;                                /* number of transactions */
     BufferedWriter writer ;                               /* for output */
+
 
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
@@ -183,9 +188,9 @@ public class WAutomaton {
                 r.extendPattern(s.getItem());
                 r.extendPattern(itemsetDelimiter);
                 s.addTransition(itemsetDelimiter, r);
-                System.out.println(r.getPattern() +" : "+s.getSupport());
-                DFAqueue.add(r);
                 nbFreqSequences++;
+                System.out.println(nbFreqSequences+" => : "+r.getPattern() +" : "+s.getSupport());
+                DFAqueue.add(r);
             }
             // we don't need the NFA all the required information are in the first states of the DFA
             wNFAStates = null;
@@ -203,8 +208,8 @@ public class WAutomaton {
                         s.addTransition(i, r1);
                         r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
                         r1.extendPattern(i);
-                        r1.setRoot(s.getItem() == itemsetDelimiter ? s : s.getRoot());
-                        DfaState r2 = r1.delta(itemsetDelimiter, s.getItem() == itemsetDelimiter?s.getRoot().getTransitions().get(i):s);
+                        r1.setRoot(s.getItem() == itemsetDelimiter? s: s.getRoot());
+                        DfaState r2 = r1.delta(itemsetDelimiter, s.getItem() == itemsetDelimiter? s.getRoot().getTransitions().get(i): s);
                         r2.setRoot(r1.getRoot());
                         r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
                         r2.extendPattern(itemsetDelimiter);

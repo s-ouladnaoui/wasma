@@ -10,7 +10,6 @@ public class State implements Comparable<State> {
     public State(boolean stateType) {
         type = stateType;
         transitions = new HashMap<>();
-        weight = 0;
         follow = new BitSet();
     }
 
@@ -18,34 +17,32 @@ public class State implements Comparable<State> {
         return weight;
     }
 
-    public void setWeight(int w){
-        weight += w;
-    }
+    public void setWeight(int w){ weight += w;}
 
     public boolean getType() { return type;}
 
-    public void setType(boolean t) { type = t; }
+    public void setType(boolean t) { type = t;}
   
-    protected Map<Integer, State > getTransitions() { return transitions; }
+    protected Map<Integer, State > getTransitions() { return transitions;}
 
-    public int getStart() { return start; }
+    public int getStart() { return start;}
 
-    public void setStart(int s) { start = s; }
+    public void setStart(int s) { start = s;}
 
-    public int getEnd() { return end; }
+    public int getEnd() { return end;}
 
-    public void setEnd(int e) { end = e; }
+    public void setEnd(int e) { end = e;}
 
     public BitSet getFollow() { 
         for (int i:transitions.keySet()) if (i >= 0) follow.set(i);
         return follow; 
     }
 
-    public void setFollow(BitSet b) { follow.or(b); }
+    public void setFollow(BitSet b) { follow.or(b);}
 
-    public State getRoot() { return root; }
+    public State getRoot() { return root;}
 
-    public void setRoot(State r) { root = r; }
+    public void setRoot(State r) { root = r;}
 
     public  void addTransition(int item, State dest) { 
         transitions.put(item,dest); 
@@ -55,10 +52,9 @@ public class State implements Comparable<State> {
         return (((Integer)getStart()).toString());
     }
 
-    public int compareTo(State t)
-    {   
-        if (getStart() < t.getStart()) return -1;
-        else if (getStart() > t.getStart()) return +1;
+    public int compareTo(State t) {   
+        if (this.getStart() < t.getStart()) return -1;
+        else if (this.getStart() > t.getStart()) return +1;
         else return 0;
     }
 }

@@ -3,7 +3,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
     ArrayList<Integer> pattern; 
@@ -73,12 +73,6 @@ public class DfaState {
         }
     }
 
-    public void addStates(List<State> l){
-        for (State s: l){
-            addState(s);
-        }
-    }
-
     public int getSupport(){
         return support;
     }
@@ -115,14 +109,12 @@ public class DfaState {
         return (listStates().toString());
     }
 
-    // Reachability between an itemsetdelimiter setstate and an item setstate 
     public void Align(DfaState s, DfaState r) {
         Iterator<State> xit = s.listStates().iterator();
         Iterator<State> yit = r.listStateRoots().iterator();
         State x = xit.next();
-        State ref1 = x;
+        State ref1 = x, ref2 = null;
         State y = yit.next();
-        State ref2 = y;
         boolean first = true;
         int sprt = 0;
         do {
@@ -136,30 +128,33 @@ public class DfaState {
                 if (yit.hasNext()) y = yit.next(); else break;
             } else {
                 if (first ) {
-                    ref2 = y;
-                    for (State m:r.getStates(y)){
+                    for(State m: r.getStates(y)){
                         this.addState(m);
-                        sprt += m.getWeight();
+                        if (first) {
+                            sprt += m.getWeight();
+                            ref2 = m;
+                            first = false;
+                        } else {
+                            sprt += m.getWeight();
+                        }
                     }
-                    first = false;
-                } else {
-                    for (State m:r.getStates(y)){
+                } else 
+                    for(State m: r.getStates(y)){
                         this.addState(m);
-                        sprt += m.getWeight();
+                        if (m.getStart() < ref2.getStart() || m.getEnd() > ref2.getEnd()) {
+                            sprt += m.getWeight();
+                            ref2 = m;
+                        }
                     }
-                    if ( y.getStart() > ref2.getEnd()) {
-                    ref2 = y;
-                }
-            }
                 if (yit.hasNext()) y = yit.next(); else break;
             }
         } while (true);
         this.setSupport(sprt);
     }
 
+
+
     // for reachability between two sets of states align them and check the descendance relation 
-    // 2 cases : between item setstate and an itmesetdelimiter setstate
-    // or        between 2 items setstates   
     public void Align(DfaState s, DfaState r, State m) {
         Iterator<State> xit = s.getStates(m).iterator();
         Iterator<State> yit = r.getStates(m).iterator();
@@ -171,20 +166,16 @@ public class DfaState {
         int sprt = 0;
         do {
             if (ref1.getEnd() < y.getStart())  { 
-                if (xit.hasNext()){
-                    ref1 = xit.next(); 
-                } else break;
+                if (xit.hasNext())  ref1 = xit.next(); else break;
             }
             else if (y.getEnd() < ref1.getStart() || ref1.getStart() > y.getStart() && ref1.getEnd() < y.getEnd()) { 
                 if (yit.hasNext()) y = yit.next(); else break;
             } else {
+                this.addState(y);
                 if (first ) {
-                    ref2 = y;
-                    this.addState(y);
                     sprt += y.getWeight();
                     first = false;
                 } else {
-                    this.addState(y);
                     if ( y.getStart() > ref2.getEnd()) {
                     ref2 = y;
                     sprt += y.getWeight();
@@ -201,7 +192,7 @@ public class DfaState {
         if (this.getItem() == WAutomaton.itemsetDelimiter ) 
             res.Align(this,ref.getTransitions().get(a));     
         else 
-            for (State r: getStates().keySet() )
+            for (State r: getStates().keySet())
                 if (ref.getTransitions().get(a).getStates().containsKey(r))
                     res.Align(this,ref.getTransitions().get(a),r);
         return res;
