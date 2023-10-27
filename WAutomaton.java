@@ -27,7 +27,7 @@ public class WAutomaton {
         wNFAStates = new ArrayList<>();   
         wNFAStates.add(wNFAStartState = new State(true));        // the initial state of the weighted nfa
         wDFAStartState = new DfaState();                     // the initial state of the weighted dfa
-        wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
+        //wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         DFAqueue = new ArrayDeque<DfaState>();
         min_supp = ms;
     }
@@ -172,7 +172,7 @@ public class WAutomaton {
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items (the F1 set) 
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState();
-                s.setSupport(alphabet.get(i));
+                //s.setSupport(alphabet.get(i));
                 for (State d:lStates.get(i)){
                     s.addState(d);
                 }
@@ -181,7 +181,8 @@ public class WAutomaton {
                 s.extendPattern(i);
                 DFAqueue.add(s);
                 DfaState r = new DfaState();
-                for (State m: s.getStates().keySet()) {
+                //r.setSupport(s.getSupport());
+                for (State m: s.listRoots()) {
                     r.Align(s, wDFAStartState.getTransitions().get(itemsetDelimiter),m);  
                 }
                 r.setRoot(wDFAStartState);
@@ -200,7 +201,6 @@ public class WAutomaton {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
-            //s.getFollow().and(fItems);
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
                 if (s.getRoot().getTransitions().containsKey(i)){  // extend the state by i iff the root contains a transition by i 
                     DfaState r1 = s.delta(i, s.getRoot());

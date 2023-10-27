@@ -10,7 +10,7 @@
             "request": "launch",
             "mainClass": "WAutomaton",
             "projectName": "",
-            "args": "50 ../kosarak25k.txt res"
+            "args": "2 ../in.txt res"
         }
     ]
 }
