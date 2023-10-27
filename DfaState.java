@@ -67,6 +67,7 @@ public class DfaState {
             states.put(s.getRoot(), ss);
         }
         this.setFollow(s.getFollow());
+        if (!pattern.isEmpty() && getItem()!= WAutomaton.itemsetDelimiter) reference = null;
     }
 
     public int getSupport(){
@@ -120,14 +121,11 @@ public class DfaState {
             if (x.getEnd() < y.getStart())  { 
                 if (xit.hasNext()){ x = xit.next();} else break;
             }
-            else if (y.getEnd() < x.getStart()) { 
-                if (yit.hasNext()) y = yit.next(); else break;
-            } else {
-                    if (ref != null ){
-                        this.addState(y);
-                    } else for(State m: r.getStates(y)){
-                        this.addState(m);
-                    }
+            else { 
+                if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd()){
+                    if (ref != null )  this.addState(y);
+                    else for(State m: r.getStates(y)) this.addState(m);
+                }
                 if (yit.hasNext()) y = yit.next(); else break;
             }
         } while (true);
@@ -135,7 +133,7 @@ public class DfaState {
 
     public DfaState delta(int a, DfaState ref) {
         DfaState res = new DfaState();         // res = delta(this,a)
-        if (this.getItem() == WAutomaton.itemsetDelimiter )  // this is an itemsetdelimiter a #_State
+        if (this.getItem() == WAutomaton.itemsetDelimiter)  // this is an itemsetdelimiter a #_State
             res.Align(this,ref.getTransitions().get(a),null);     
         else {
             Set<State> l = this.listRoots();
