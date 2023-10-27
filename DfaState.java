@@ -49,13 +49,13 @@ public class DfaState {
         return reference;
     }
 
-    public Set<State> listRoots() {
+    public TreeSet<State> listRoots() {
         TreeSet<State> r = new TreeSet<>(State.BY_START);
         for (State s:states.keySet()) r.add(s);
         return r;
     }
-
-    public void addState(State s){
+ 
+    public void addState(State s) {
         if (reference.add(s)) {
             this.setSupport(s.getWeight());
         } 
@@ -106,25 +106,40 @@ public class DfaState {
         return (states.toString());
     }
 
+    private static final State borne1(TreeSet<State> l, TreeSet<State> m){
+        return (l.first().getStart() < m.first().getStart())?  m.first(): l.first();
+    }
+
+    private static final State borne2(TreeSet<State> l, TreeSet<State> m){
+        return (l.last().getStart() < m.last().getStart())?  l.last(): m.last();
+    }
+
     public void Align(DfaState s, DfaState r, State ref) {
         Iterator<State> xit, yit;
+        TreeSet<State> l,m;
         if (ref == null){
-            xit = s.getReferences().iterator();
-            yit = r.listRoots().iterator();
+            l = s.getReferences();
+            m = r.listRoots();
+            //xit = s.getReferences().iterator();
+            //yit = r.listRoots().iterator();
         } else {
-            xit = s.getStates(ref).iterator();
-            yit = r.getStates(ref).iterator();
+            l = s.getStates(ref);
+            m = r.getStates(ref);
+            //xit = s.getStates(ref).iterator();
+            //yit = r.getStates(ref).iterator();
         } 
+        xit = l.iterator();
+        yit = m.iterator();
+        //State b1 = borne1(l, m);
+        //State b2 = borne2(l, m);
         State x = xit.next();
         State y = yit.next();
         do {
-            if (x.getEnd() < y.getStart())  { 
-                if (xit.hasNext()){ x = xit.next();} else break;
-            }
+            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break; 
             else { 
                 if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd()){
                     if (ref != null )  this.addState(y);
-                    else for(State m: r.getStates(y)) this.addState(m);
+                    else for(State t: r.getStates(y)) this.addState(t);
                 }
                 if (yit.hasNext()) y = yit.next(); else break;
             }
