@@ -2,7 +2,7 @@ import java.util.*;
 // one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
 public class DfaState {   
     ArrayList<Integer> pattern; 
-    TreeSet<State> reference;
+    TreeSet<State> reference;         // the min antichain of the stateset of the object
     TreeMap<State,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
     HashMap<Integer,DfaState> transitions;   // the set of DFA transitions from this state by item
     DfaState root;
@@ -11,7 +11,7 @@ public class DfaState {
 
     public DfaState(){
         reference = new TreeSet<State>(State.BY_DESC );
-        states = new TreeMap(State.BY_START);
+        states = new TreeMap<State,TreeSet<State>>(State.BY_START);
         transitions = new HashMap<Integer,DfaState>();
         follow = new BitSet(); 
         pattern =  new ArrayList<Integer>();
@@ -37,37 +37,45 @@ public class DfaState {
         return states.get(r);
     }
 
-    public TreeSet<State> listStates() {
-        TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (State rt: this.states.keySet() ){       
-            r.addAll(this.getStates(rt));      
-        }
-        return r;
+    public TreeSet<State> getReferences(int i, int[] t){
+        TreeSet<State> r = new TreeSet<>(State.BY_DESC);
+        for(State s:reference) if (s.getFollow().get(i)) r.add(s);
+        t[0] = r.first().getStart();
+        t[1] = r.last().getEnd();
+        return r; 
     }
 
-    public TreeSet<State> getReferences(){
-        return reference;
-    }
-
-    public TreeSet<State> listRoots() {
+    public TreeSet<State> listRoots(int inf, int sup) {
         TreeSet<State> r = new TreeSet<>(State.BY_START);
-        for (State s:states.keySet()) r.add(s);
+        for (State s:states.keySet()) 
+            if (s.getStart() >= inf && s.getStart() <= sup) 
+                r.add(s); 
         return r;
+    }
+
+    public void insertState(State s){   //    add a state without weight update used during loading to improve its time
+        if (states.containsKey(s.getRoot())) {
+            states.get(s.getRoot()).add(s);
+        } else {
+            TreeSet<State> ss = new TreeSet<State>(State.BY_START);
+            ss.add(s);
+            states.put(s.getRoot(), ss);
+        }
+        this.setFollow(s.getFollow());
     }
  
-    public void addState(State s) {
+    public void addState(State s) {      // add state with weight computing used in mining phase
         if (reference.add(s)) {
             this.setSupport(s.getWeight());
         } 
         if (states.containsKey(s.getRoot())) {
             states.get(s.getRoot()).add(s);
         } else {
-            TreeSet<State> ss = new TreeSet<State>(State.BY_DESC);
+            TreeSet<State> ss = new TreeSet<State>(State.BY_START);
             ss.add(s);
             states.put(s.getRoot(), ss);
         }
         this.setFollow(s.getFollow());
-        if (!pattern.isEmpty() && getItem()!= WAutomaton.itemsetDelimiter) reference = null;
     }
 
     public int getSupport(){
@@ -106,36 +114,44 @@ public class DfaState {
         return (states.toString());
     }
 
-    private static final State borne1(TreeSet<State> l, TreeSet<State> m){
-        return (l.first().getStart() < m.first().getStart())?  m.first(): l.first();
+    /*private static final int borne1(TreeSet<State> l, TreeSet<State> m){
+        return (l.first().getStart());
     }
 
-    private static final State borne2(TreeSet<State> l, TreeSet<State> m){
-        return (l.last().getStart() < m.last().getStart())?  l.last(): m.last();
-    }
+    private static final int borne2(TreeSet<State> l, TreeSet<State> m){
+        return (l.last().getStart() < m.last().getStart())?  l.last().getEnd(): m.last().getEnd();
+    }*/
 
-    public void Align(DfaState s, DfaState r, State ref) {
+    public void Align_from_itemsetDelimiter(DfaState s, DfaState r,int item) {
         Iterator<State> xit, yit;
-        TreeSet<State> l,m;
-        if (ref == null){
-            l = s.getReferences();
-            m = r.listRoots();
-            //xit = s.getReferences().iterator();
-            //yit = r.listRoots().iterator();
-        } else {
-            l = s.getStates(ref);
-            m = r.getStates(ref);
-            //xit = s.getStates(ref).iterator();
-            //yit = r.getStates(ref).iterator();
-        } 
-        xit = l.iterator();
-        yit = m.iterator();
-        //State b1 = borne1(l, m);
-        //State b2 = borne2(l, m);
+        int[] k = new int[2];
+        xit = s.getReferences(item,k).iterator();
+        yit = r.listRoots(k[0],k[1]).iterator();
+        State x ;
+        if (xit.hasNext()) x = xit.next(); else return;
+        State y;
+        if (yit.hasNext()) y = yit.next(); else return;
+        do {
+            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break;
+            else { 
+                if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd()){
+                    for(State t: r.getStates(y)) this.addState(t);
+                }
+                if (yit.hasNext()) y = yit.next(); else break;
+            }
+        } while (true);
+    }
+
+    
+    
+    public void Align_within_Itemset(DfaState s, DfaState r, State ref) {
+        Iterator<State> xit, yit;
+        xit = s.getStates(ref).iterator();
+        yit = r.getStates(ref).iterator(); 
         State x = xit.next();
         State y = yit.next();
         do {
-            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break; 
+            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break;
             else { 
                 if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd()){
                     if (ref != null )  this.addState(y);
@@ -149,12 +165,12 @@ public class DfaState {
     public DfaState delta(int a, DfaState ref) {
         DfaState res = new DfaState();         // res = delta(this,a)
         if (this.getItem() == WAutomaton.itemsetDelimiter)  // this is an itemsetdelimiter a #_State
-            res.Align(this,ref.getTransitions().get(a),null);     
+            res.Align_from_itemsetDelimiter(this,ref.getTransitions().get(a),a);     
         else {
-            Set<State> l = this.listRoots();
+            Set<State> l = this.listRoots(-1,(int)Double.POSITIVE_INFINITY );
             for (State r: l){                 // this is an itemsetState a \sigma_State
                 if (ref.getTransitions().get(a).getStates().containsKey(r))
-                res.Align(this,ref.getTransitions().get(a),r);   
+                res.Align_within_Itemset(this,ref.getTransitions().get(a),r);   
             }
         }     
         return res;

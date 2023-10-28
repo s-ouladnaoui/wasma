@@ -6,28 +6,23 @@ public class WAutomaton {
 
     static ArrayList<State> wNFAStates;                   /* the set of states of the weighted nfa */
     static ArrayDeque<DfaState> DFAqueue;                 /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
-    static State wNFAStartState;                         /* the initial state of the wnfa */
+    static State wNFAStartState;                          /* the initial state of the wnfa */
     static DfaState wDFAStartState;                       /* the initial state of the wnfa */
     static BitSet fItems = new BitSet();                  /* the set F1 of frequent items */  
     static final String itemSeparator = " ";
     static final int itemsetDelimiter = -1;               /* the endmark of an itemset */
     static final int transactionDelimiter = -2;           /* the endmark of a sequence */
-    //static final HashMap<DfaState,HashMap<Integer,DfaState>> delta = new HashMap<DfaState,HashMap<Integer,DfaState>>();
 
-    //static int NbState = 0;                               /* number of states */
     static int min_supp = 1;                              /* the support threshold */
-
-    static int nbFreqSequences = 0;                              /* number of frequent sequences in the dataset*/
+    static int nbFreqSequences = 0;                       /* number of frequent sequences in the dataset*/
     int code = 0;                                         /* start code for reachability queries */
-    int NbTransactions = 0;                                /* number of transactions */
+    int NbTransactions = 0;                               /* number of transactions */
     BufferedWriter writer ;                               /* for output */
-
 
     public WAutomaton (int ms) {
         wNFAStates = new ArrayList<>();   
         wNFAStates.add(wNFAStartState = new State(true));        // the initial state of the weighted nfa
         wDFAStartState = new DfaState();                     // the initial state of the weighted dfa
-        //wDFAStartState.getStates().put(wNFAStartState, new TreeSet<State>());
         DFAqueue = new ArrayDeque<DfaState>();
         min_supp = ms;
     }
@@ -158,39 +153,40 @@ public class WAutomaton {
             writer.write("Loading time: " + (endTime-startTime)/1000000 + " ms\n");
             System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
             System.out.println("Loading time: " + (endTime-startTime)/1000000 + " ms");
-            /* ======== Preparation of the Determinization: creation of the first states of the DFA ===================================== */       
+/* ==================== Preparation of the Determinization: creation of the first states of the DFA =============================================================*/       
             // set the start and end code values for the states of the used in reachability cheking
             codage(wNFAStartState);
+            //alphabet = null;
             wDFAStartState.setRoot(wDFAStartState);
             wDFAStartState.extendPattern(itemsetDelimiter);
             // add the transition from wDFAStartState by the itemsetdelimiter  (-1 here)
             DfaState s = new DfaState();
             for (State d:lStates.get(itemsetDelimiter)){
-                s.addState(d);
+                s.insertState(d);
             }
             wDFAStartState.addTransition(itemsetDelimiter, s);
             // prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items (the F1 set) 
             for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 s = new DfaState();
-                //s.setSupport(alphabet.get(i));
+                s.setSupport(alphabet.get(i));
                 for (State d:lStates.get(i)){
-                    s.addState(d);
+                    s.insertState(d);
                 }
                 wDFAStartState.addTransition(i, s);
                 s.setRoot(wDFAStartState);
                 s.extendPattern(i);
                 DFAqueue.add(s);
                 DfaState r = new DfaState();
-                //r.setSupport(s.getSupport());
-                for (State m: s.listRoots()) {
-                    r.Align(s, wDFAStartState.getTransitions().get(itemsetDelimiter),m);  
+                r.setSupport(s.getSupport());
+                for (State m: s.listRoots(-1,(int)Double.POSITIVE_INFINITY )) {
+                    r.Align_within_Itemset(s, wDFAStartState.getTransitions().get(itemsetDelimiter),m);  
                 }
                 r.setRoot(wDFAStartState);
                 r.extendPattern(s.getItem());
                 r.extendPattern(itemsetDelimiter);
                 s.addTransition(itemsetDelimiter, r);
                 nbFreqSequences++;
-                System.out.println(nbFreqSequences+" => : "+r.getPattern() +" : "+s.getSupport());
+                //System.out.println(nbFreqSequences+" => : "+r.getPattern() +" : "+s.getSupport());
                 DFAqueue.add(r);
             }
             // we don't need the NFA all the required information are in the first states of the DFA
@@ -201,21 +197,50 @@ public class WAutomaton {
         DfaState s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
+            Set<State> l = s.listRoots(-1,(int)Double.POSITIVE_INFINITY );
+            HashMap<Integer,DfaState> map = s.getRoot().getTransitions();
             for (int i = s.getFollow().nextSetBit(0); i > 0; i = s.getFollow().nextSetBit(i + 1)) {
-                if (s.getRoot().getTransitions().containsKey(i)){  // extend the state by i iff the root contains a transition by i 
-                    DfaState r1 = s.delta(i, s.getRoot());
+                if (map.containsKey(i)){  // extend the state by i iff the root contains a transition by i 
+                    DfaState r1 = new DfaState();
+//================================================================================================================================================
+                    //      r1 = delta(s,i)
+                    //      we replaced the call to delta to a call to Align diectly 
+                    //      DfaState r1 = s.delta(i, s.getRoot());                    
+                    //============================================================================================================================
+                    if (s.getItem() == WAutomaton.itemsetDelimiter)  // this is an itemsetdelimiter a #_State
+                    r1.Align_from_itemsetDelimiter(s,(DfaState)map.get(i),i);     
+                    else {
+                        for (State r: l){                 // this is an itemsetState a \sigma_State
+                            if (s.getRoot().getTransitions().get(i).getStates().containsKey(r))
+                            r1.Align_within_Itemset(s,(DfaState)map.get(i),r);   
+                        }
+                    }                   
+//=================================================================================================================================================
                     if (r1.getSupport() >= min_supp) {
                         s.addTransition(i, r1);
                         r1.pattern = new ArrayList<Integer>(s.getPattern());       // Create new pattern by retrieving the current state pattern
                         r1.extendPattern(i);
                         r1.setRoot(s.getItem() == itemsetDelimiter? s: s.getRoot());
-                        DfaState r2 = r1.delta(itemsetDelimiter, s.getItem() == itemsetDelimiter? s.getRoot().getTransitions().get(i): s);
+//================================================================================================================================================
+                        //   r2 = delta(r1,itemsetDelimiter)
+                        //   = r1.delta(itemsetDelimiter, s.getItem() == itemsetDelimiter? s.getRoot().getTransitions().get(i): s)
+                        //  same here we call Align directly instead of delta
+                        //===============================================================================================================
+                        DfaState r2 = new DfaState();
+                        DfaState ref = s.getItem() == itemsetDelimiter? s.getRoot().getTransitions().get(i): s;
+                        Set<State> m = r1.listRoots(-1,(int)Double.POSITIVE_INFINITY );
+                        for (State r: m){                 // this is an itemsetState a \sigma_State
+                            if (ref.getTransitions().get(itemsetDelimiter).getStates().containsKey(r))
+                            r2.Align_within_Itemset(r1,ref.getTransitions().get(itemsetDelimiter),r);   
+                        }
+                        
+//=======================================================================================================================================
                         r2.setRoot(r1.getRoot());
-                        r2.pattern =  new ArrayList<Integer>(r1.getPattern());                                     // extend it by a 
+                        r2.pattern =  new ArrayList<Integer>(r1.getPattern());   // extend it by a 
                         r2.extendPattern(itemsetDelimiter);
                         r1.addTransition(itemsetDelimiter,r2);
                         nbFreqSequences++;
-                        System.out.println(nbFreqSequences+" => : "+r2.getPattern() +" : "+r1.getSupport());
+                        //System.out.println(nbFreqSequences+" => : "+r2.getPattern() +" : "+r1.getSupport());
                         if (!r1.getFollow().isEmpty()) DFAqueue.add(r1);
                         if (!r2.getFollow().isEmpty()) DFAqueue.add(r2);            
                     }

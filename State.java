@@ -1,8 +1,8 @@
 import java.util.*;   
 /* Weighted Automaton State Class */
 public class State {
-    public static final Comparator<State> BY_START = new ByStart();
-    public static final Comparator<State> BY_DESC = new ByDesc();
+    public static final Comparator<State> BY_START = new ByStart();  // comparator using start number
+    public static final Comparator<State> BY_DESC = new ByDesc(); // coparator using descendance relation
     boolean type;                                    /* flag : the state is an itemset delimiter */
     TreeMap<Integer,State> transitions;              /* Immediate transition list */
     int start, end;                                  /* codes for reachability (descendence) queries */
@@ -48,9 +48,7 @@ public class State {
 
     public void setEnd(int e) { end = e;}
 
-    public BitSet getFollow() { 
-        for (int i:transitions.keySet()) if (i >= 0) follow.set(i); return follow; 
-    }
+    public BitSet getFollow() {for (int i:transitions.keySet()) if (i >= 0) follow.set(i); return follow;}
 
     public void setFollow(BitSet b) { follow.or(b);}
 
