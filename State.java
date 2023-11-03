@@ -6,23 +6,23 @@ public class State {
     boolean type;                                    /* flag : the state is an itemset delimiter */
     TreeMap<Integer,State> transitions;              /* Immediate transition list */
     int start, end;                                  /* codes for reachability (descendence) queries */
-    int weight ;                                     /* the frequency of the prefix from the startstate to this state */ 
+    int weight;                                     /* the frequency of the prefix from the startstate to this state */ 
     State root; 
     BitSet follow;                                    /* the root of the subtree: the begining of the itemset that contains this state */
     
     private static class ByStart implements Comparator<State>
     {
         public int compare(State p,State q){
-            return p.getStart() - q.getStart();
+            return p.getStart() - q.getStart();         // the natural order of start codes
         }
     }
     
     private static class ByDesc implements Comparator<State>
     {
         public int compare(State p,State q){
-            if (p.getEnd() < q.getStart()) return -1;
-            if (p.getStart() > q.getEnd()) return +1;
-            return 0;        }
+            if (p.getEnd() < q.getStart()) return -1;   // p is at the left of q so is less than q
+            if (p.getStart() > q.getEnd()) return +1;   // p is at the right of q so is greater than q
+            return 0;        }                          // p and q have a descendance relationship, they are equal
     }
     public State(boolean stateType) {
         type = stateType;
