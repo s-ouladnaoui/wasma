@@ -1,47 +1,47 @@
 import java.util.*;
-// one state of the wDFA is a set of states of the nfa used in the queue of the deteminizatiob module
-public class DfaState {   
-    ArrayList<Integer> pattern; 
-    TreeSet<State> reference;         // the min antichain of the stateset of the object
-    TreeMap<State,TreeSet<State>> states;   // the set of states categorized by their (sub)roots
-    HashMap<Integer,DfaState> transitions;   // the set of DFA transitions from this state by item
-    DfaState root;
+// one state of the wDFA is a set of states of the wNfa used in the queue of the deteminizatiob module
+public class DfaState implements Comparable<DfaState> {   
+    int item; 
+    //TreeSet<Integer> reference;                   // the min antichain of the stateset of the object
+    TreeMap<Integer,TreeSet<Integer>> states;       // the set of states categorized by their (sub)roots (subtree or region)
+    //TreeSet<DfaState> transitions;      // the set of DFA transitions from this state by item
+    int root;
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
-    public DfaState(){
-        reference = new TreeSet<State>(State.BY_DESC );
-        states = new TreeMap<State,TreeSet<State>>(State.BY_START);
-        transitions = new HashMap<Integer,DfaState>();
+    public DfaState(int i){
+        //reference = new TreeSet<State>(State.BY_DESC );
+        states = new TreeMap<Integer,TreeSet<Integer>>();
+        //transitions = new TreeSet<DfaState>();
         follow = new BitSet(); 
-        pattern =  new ArrayList<Integer>();
+        item  =  i;
     }
 
-    public int getItem() {
-        return pattern.get(pattern.size()-1);
+    public int getItem(){
+        return item;
     }
 
-    public ArrayList<Integer> getPattern() {
-        return pattern;
+    
+    
+    public BitSet fringerprint(){
+        BitSet b = new BitSet();
+        //for (int i:reference) b.set(i);
+        return b;
     }
 
-    public void extendPattern(int i) {
-        pattern.add(i);
-    }
-
-    public TreeMap<State,TreeSet<State>> getStates(){
-        return states;
-    }
-
-    public TreeSet<State> getStates(State r){
-        return states.get(r);
-    }
-
-    /*public TreeSet<State> listStates(){
-        TreeSet<State> r = new TreeSet<>(State.BY_START);
-        for (State t:states.keySet()) r.addAll(this.getStates(t));
+    public TreeSet<State> getStates(){
+        TreeSet<State> r = new TreeSet<State>(State.BY_START);
+        for (TreeSet<Integer> i:states.values()) 
+            for (int j:i)
+                r.add(WASMA.NFA.State(j));
         return r;
-    }*/
+    }
+
+    public TreeSet<State> getStates(int root){
+        TreeSet<State> r = new TreeSet<State>(State.BY_START);
+        for (int j:states.get(root)) r.add(WASMA.NFA.State(j));
+        return r;
+    }
 
     public int getSupport(){
         return support;
@@ -59,34 +59,43 @@ public class DfaState {
         follow.or(b);
     }
     
-    public HashMap<Integer,DfaState> getTransitions(){
-        return transitions;
+    /*public TreeSet<DfaState> getTransitions(){
+        TreeSet<DfaState> r = new TreeSet<>();
+        for (int i:WAutomaton.DFA.get(this.index()).values())  r.add(WAutomaton.wDFAstateMap.get(i));
+        return r;
     }
 
-    public void addTransition(int i, DfaState s){
-        transitions.put(i, s);
+    public DfaState getTransition(int i){
+        return WAutomaton.wDFAstateMap.get(WAutomaton.wDFA.get((WAutomaton.wDFA.get(this.index()).get(i))));
     }
+    
+    public int index(){
+        return 0;
+    }
+    public void addTransition(int i, int s){
+        WAutomaton.wDFA.get(this.index()).put(i,s);
+    }*/
 
-    public DfaState getRoot(){
+    public int getRoot(){
         return root;
     }
 
-    public void setRoot(DfaState r){
+    public void setRoot(int r){
         root = r;
     }
 
-    public TreeSet<State> getRoots(int min, int max) {
+    public TreeSet<State> getRoots() { 
         TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (State s:states.keySet()) if (s.getStart() >= min && s.getEnd() <= max) r.add(s);   
-        return r;
-    }
-
-    public TreeSet<State> getRoots() {
-        TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (State s:states.keySet()) r.add(s);   
+        for (int i:states.keySet()) r.add(WASMA.NFA.State(i));
         return r;
     }
     
+    /*public TreeSet<State> getRoots(int min, int max) {
+        TreeSet<State> r = new TreeSet<State>(State.BY_START);
+        for (State s:states.keySet()) if (s.getStart() >= min && s.getEnd() <= max) r.add(s);   
+        return r;
+    }*/
+
     public String toString(){
         return (states.toString());
     }
@@ -97,7 +106,7 @@ public class DfaState {
 
     private static final int borne2(TreeSet<State> l, TreeSet<State> m){
         return (l.last().getStart() < m.last().getStart())?  l.last().getEnd(): m.last().getEnd();
-    }*/
+    }
 
     public TreeSet<State> getReferences(){
         return reference; 
@@ -109,55 +118,49 @@ public class DfaState {
         border[0] = r.first().getStart();
         border[1] = r.last().getEnd();
         return r; 
-    }
+    }*/
 
-    public void addState(State s, boolean compute_weight) {      // add state to the stateset and consider its weight if it's the case 
-        if (states.containsKey(s.getRoot())) states.get(s.getRoot()).add(s);
+    public void addState(int s, boolean compute_weight) {      // add state to the stateset and consider its weight if it's the case 
+        if (states.containsKey(WASMA.NFA.State(s).getRoot())) 
+            states.get(WASMA.NFA.State(s).getRoot()).add(s);
         else {
-            TreeSet<State> ss = new TreeSet<State>(State.BY_START);
+            TreeSet<Integer> ss = new TreeSet<Integer>();
             ss.add(s);
-            states.put(s.getRoot(), ss);
+            states.put(WASMA.NFA.State(s).getRoot(), ss);
         }
-        this.setFollow(s.getFollow());
-        if (compute_weight && reference.add(s)) {
-            this.setSupport(s.getWeight());
-         if (s.getType() && s.getFollow().isEmpty())  reference.remove(s);
-        } 
+        this.setFollow(WASMA.NFA.State(s).getFollow());
     }
     
-    public void Align_from_itemsetDelimiter(DfaState s, DfaState r,int item) {
-        int[] minMax =  new int[2];
-        Iterator<State> xit = s.getReferences(item, minMax).iterator();
-        Iterator<State> yit = r.getRoots(minMax[0],minMax[1]).iterator();
-        State x = xit.next();
-        State y = yit.next();
+    public void Align(DfaState s, DfaState r, int ref) {
+        Iterator<State> xit, yit;
+        xit = (((Integer)ref == null)?s.getStates():s.getStates(ref)).iterator();
+        yit = (((Integer)ref == null)?r.getRoots():r.getStates(ref)).iterator();
+        State x = xit.next(),y = yit.next();
         do {
-            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break;
+            if (x.getEnd() < y.getStart()) if (xit.hasNext() )  x = xit.next(); else break;
             else
             { 
                 if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd()) 
-                    for(State t: r.getStates(y)) addState(t,true);
+                    if ((Integer)ref == null)   
+                        for (State m :r.getStates(y.getRoot())) {
+                            addState(m.getNum(), true);
+                        }
+                    else addState(y.getNum(),true);
                 if (yit.hasNext()) y = yit.next(); else break;
             }
         } while (true);
     }
 
-    public void Align_within_Itemset(DfaState s, DfaState r, State ref) {
-        Iterator<State> xit = s.getStates(ref).iterator();
-        Iterator<State> yit = r.getStates(ref).iterator(); 
-        State x = xit.next();
-        State y = yit.next();
-        do {
-            if (x.getEnd() < y.getStart()) if (xit.hasNext()) x = xit.next(); else break;
-            else { 
-                if (y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  
-                    addState(y,true);
-                if (yit.hasNext()) y = yit.next(); else break;
-            }
-        } while (true);
+    public int compareTo(DfaState other) {
+        return this.item - other.item;
+       
     }
 
-    /*public DfaState delta(int a, DfaState ref) {
+    /*public DfaState findTransition(int i) {
+        return transitions.floor(new DfaState(i));
+    }
+       
+    public DfaState delta(int a, DfaState ref) {
         DfaState res = new DfaState();         // res = delta(this,a)
         if (this.getItem() == WAutomaton.itemsetDelimiter)  // this is an itemsetdelimiter a #_State
             res.Align_from_itemsetDelimiter(this,ref.getTransitions().get(a),a);     
