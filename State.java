@@ -4,7 +4,8 @@ public class State {
     public static final Comparator<State> BY_START = new ByStart();  // comparator using start number
     public static final Comparator<State> BY_DESC = new ByDesc(); // coparator using descendance relation
     boolean type;                                    /* flag : the state is an itemset delimiter */
-    int start, end,                                  /* codes for reachability (descendence) queries */
+    int start;
+    int end,                                  /* codes for reachability (descendence) queries */
         weight,                                     /* the frequency of the prefix from the startstate to this state */ 
         root;                                       /* the root of the subtree: the begining of the itemset that contains this state */
     BitSet follow;    
@@ -22,8 +23,8 @@ public class State {
         public int compare(State p,State q){
             if (p.end < q.start) return -1;   // p is at the left of q so is less than q
             if (p.start > q.end) return +1;   // p is at the right of q so is greater than q
-            return 0;        
-        }                          // p and q have a descendance relationship, they are equal
+            return 0;                   // p and q have a descendance relationship, they are equal
+        }                          
     }
 
     public State(boolean stateType) {
@@ -31,9 +32,9 @@ public class State {
         follow = new BitSet();
     }
 
-    public int getNum(){
-        return num;
-    }
+    public int getNum(){ return num;}
+
+    public void setNum(int n) { num = n;}
 
     public int getWeight() { return weight;}
 
@@ -49,9 +50,7 @@ public class State {
 
     public void setEnd(int e) { end = e;}
 
-    public BitSet getFollow() {//for (int i:transitions.keySet()) if (i >= 0) follow.set(i); 
-        return follow;
-    }
+    public BitSet getFollow() { return follow;}
 
     public void setFollow(BitSet b) { follow.or(b);}
 
@@ -59,5 +58,5 @@ public class State {
 
     public void setRoot(int r) { root = r;}
 
-    public String toString() { return ((Integer)start).toString();}
+    public String toString() { return ((Integer) start).toString();}
 }

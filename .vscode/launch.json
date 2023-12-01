@@ -8,7 +8,7 @@
             "type": "java",
             "name": "Launch WAutomaton",
             "request": "launch",
-            "mainClass": "WAutomaton",
+            "mainClass": "WASMA",
             "projectName": "",
             "args": "2 ../in.txt res"
         }
