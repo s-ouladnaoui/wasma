@@ -9,7 +9,7 @@ public class State {
         weight,                                     /* the frequency of the prefix from the startstate to this state */ 
         root;                                       /* the root of the subtree: the begining of the itemset that contains this state */
     BitSet follow;    
-    int num;                              
+    int num,ord;                              
     
     private static class ByStart implements Comparator<State>
     {
@@ -35,6 +35,10 @@ public class State {
     public int getNum(){ return num;}
 
     public void setNum(int n) { num = n;}
+
+    public int getOrder(){ return ord;}
+
+    public void setOrder(int n) { ord = n;}
 
     public int getWeight() { return weight;}
 
