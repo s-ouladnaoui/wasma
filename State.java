@@ -3,27 +3,26 @@ import java.util.*;
 public class State {
     public static final Comparator<State> BY_START = new ByStart();  // comparator using start number
     public static final Comparator<State> BY_DESC = new ByDesc(); // coparator using descendance relation
-    boolean type;                                    /* flag : the state is an itemset delimiter */
-    int start;
-    int end,                                  /* codes for reachability (descendence) queries */
-        weight,                                     /* the frequency of the prefix from the startstate to this state */ 
+    boolean type;                                   /* flag : the state is an itemset delimiter */
+    int start, end;                                 /* codes for reachability (descendence) queries */
+    int weight,                                     /* the frequency of the prefix from the startstate to this state */ 
         root;                                       /* the root of the subtree: the begining of the itemset that contains this state */
-    BitSet follow;    
-    int num,ord;                              
+    BitSet follow;                                  /* the following items in the NFAutomaton */
+    int num,ord;                                    /* index in the NFA adjList and id in the set of states associated with the item */
     
-    private static class ByStart implements Comparator<State>
+    private static class ByStart implements Comparator<State>  // the natural state order is based on start code used in DFA state alignment
     {
         public int compare(State p,State q){
-            return p.start - q.start;         // the natural order of start codes
+            return p.start - q.start;         
         }
     }
     
-    private static class ByDesc implements Comparator<State>
+    private static class ByDesc implements Comparator<State>    // the second order is based on reachability relation used in support calculation 
     {
         public int compare(State p,State q){
-            if (p.end < q.start) return -1;   // p is at the left of q so is less than q
-            if (p.start > q.end) return +1;   // p is at the right of q so is greater than q
-            return 0;                   // p and q have a descendance relationship, they are equal
+            if (p.end < q.start) return -1;                     // p is at the left of q so is less than q
+            if (p.start > q.end) return +1;                     // p is at the right of q so is greater than q
+            return 0;                                           // p and q have a descendance relationship, they are equal
         }                          
     }
 

@@ -7,10 +7,10 @@ public class DfaState {
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
-    public DfaState(int item){
+    public DfaState(int i){
         states = new TreeMap<Integer,TreeSet<Integer>>();
         follow = new BitSet(); 
-        item  =  item;
+        item  =  i;
     }
 
     public int getItem(){ return item; }
@@ -35,7 +35,7 @@ public class DfaState {
 
     public BitSet getFollow(){ return follow;}
 
-    public void setFollow(BitSet bol){ follow.or(bol);}
+    public void setFollow(BitSet b){ follow.or(b);}
 
     public int getRoot(){ return root;}
 

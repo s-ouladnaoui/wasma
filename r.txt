@@ -1,6 +1,0 @@
-Database: ../data.txt; Alphabet size: 6426; Database size: 3764
-Loading time: 193 ms
-[1, -1] : 773
-[3, -1] : 1693
-[6, -1] : 2290
-[11, -1] : 1433
