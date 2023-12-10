@@ -2,13 +2,14 @@ import java.util.*;
 /* Weighted NFA State Class */
 public class State {
     public static final Comparator<State> BY_START = new ByStart();  // comparator using start number
-    public static final Comparator<State> BY_DESC = new ByDesc(); // coparator using descendance relation
-    boolean type;                                   /* flag : the state is an itemset delimiter */
-    int start, end;                                 /* codes for reachability (descendence) queries */
-    int weight,                                     /* the frequency of the prefix from the startstate to this state */ 
-        root;                                       /* the root of the subtree: the begining of the itemset that contains this state */
-    BitSet follow;                                  /* the following items in the NFAutomaton */
-    int num,ord;                                    /* index in the NFA adjList and id in the set of states associated with the item */
+    public static final Comparator<State> BY_DESC = new ByDesc();   // coparator using descendance relation
+    boolean type;                                           /* flag : the state is an itemset delimiter */
+    int start, end;                                         /* codes for reachability (descendence) queries */
+    int weight,                                             /* the frequency of the prefix from the startstate to this state */ 
+        root;                                               /* the root of the subtree: the begining of the itemset that contains this state */
+    BitSet follow;                                          /* the following items in the NFAutomaton */
+    int num,                                                /* index in the NFA adjList */
+        ord;                                                /* id for "Compact" BitSet representing the set of states associated with the item */
     
     private static class ByStart implements Comparator<State>  // the natural state order is based on start code used in DFA state alignment
     {
