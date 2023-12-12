@@ -15,18 +15,24 @@ public class DfaState {
 
     public int getItem(){ return item; }
 
-    public TreeSet<State> getStates(int root){
+    public TreeSet<State> getStates(int root, int item){
         TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (int j:states.get(root)) r.add(WASMA.NFA.StateMap.get(j));
+        if (item == WASMA.itemsetDelimiter) 
+            for (int j:states.get(root)) 
+                r.add(WASMA.NFA.State(j));
+        else 
+            for (int j:states.get(root)) 
+                if (WASMA.NFA.State(j).getFollow().get(item))
+                    r.add(WASMA.NFA.State(j));
         return r;
     }
 
-    public TreeSet<State> getStates(){
+    public TreeSet<State> getStates(int item){
         TreeSet<State> r = (this.getItem() == WASMA.itemsetDelimiter)?
                             new TreeSet<State>(State.BY_DESC):
                             new TreeSet<State>(State.BY_START);
         for (int root:states.keySet()) 
-            r.addAll(getStates(root));
+            r.addAll(getStates(root, item));
         return r;
     }
 
@@ -44,7 +50,8 @@ public class DfaState {
 
     public TreeSet<State> getRoots() { 
         TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (int i:states.keySet()) r.add(WASMA.NFA.State(i));
+        for (int i:states.keySet()) 
+            r.add(WASMA.NFA.State(i));
         return r;
     }
 
@@ -55,8 +62,10 @@ public class DfaState {
     public void addState(int s, boolean compute_weight) {       // add state to the stateset and consider its weight if it's the case 
         State tmp = WASMA.NFA.State(s);                         // to avoid multiple calls to NFA.State() method
         if (WASMA.reference.add(tmp)) {
-            if (compute_weight) this.setSupport(tmp.getWeight());
-            if (this.getItem() != WASMA.itemsetDelimiter) WASMA.fringerprint.set(tmp.getOrder()); 
+            if (compute_weight) 
+                this.setSupport(tmp.getWeight());
+            if (this.getItem() != WASMA.itemsetDelimiter) 
+                WASMA.fringerprint.set(tmp.getOrder()); 
         }                
         if (states.containsKey(tmp.getRoot())) 
             states.get(tmp.getRoot()).add(s);
@@ -65,13 +74,15 @@ public class DfaState {
             ss.add(s);
             states.put(tmp.getRoot(), ss);
         }
-        if (!tmp.getFollow().isEmpty()) this.setFollow(tmp.getFollow());
+        this.setFollow(tmp.getFollow());
     }
     
-    public void Align(DfaState s, DfaState r, int ref, boolean computeSupport) {
-        Iterator<State> xit = (((Integer)ref == -1)?s.getStates():s.getStates(ref)).iterator();
-        Iterator<State> yit = (((Integer)ref == -1)?r.getRoots():r.getStates(ref)).iterator();
-        State x = xit.next(),y = yit.next();
+    public void Align(DfaState s, DfaState r, int ref, int item, boolean computeSupport) {
+        State x, y;
+        Iterator<State> xit = ((ref == -1)?s.getStates(item):s.getStates(ref,item)).iterator();
+        if (xit.hasNext()) x = xit.next(); else return;
+        Iterator<State> yit = ((ref == -1)?r.getRoots():r.getStates(ref,-1)).iterator();
+        if (yit.hasNext()) y = yit.next(); else return;
         do {
             if (x.getEnd() < y.getStart()) if (xit.hasNext() )  // if state x is less (at the left) of state y advance in x iterator
                 x = xit.next(); else break;
@@ -79,23 +90,23 @@ public class DfaState {
             { 
                 if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
                     if (ref == -1)   
-                        for (State m :r.getStates(y.getNum()))      // case where y is a subroot: insert all its descendents
+                        for (State m :r.getStates(y.getNum(),-1))   // case where y is a subroot: insert all its descendents
                             addState(m.getNum(), computeSupport);
-                    else addState(y.getNum(), computeSupport);      // y is a simple state
-                if (yit.hasNext()) y = yit.next(); else break;      // otherwise: advance in the y iterator
+                    else addState(y.getNum(), computeSupport);
+                if (yit.hasNext()) y = yit.next(); else break;
             }
         } while (true);
     }
 
-    public DfaState Delta(int i, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
-        DfaState r   = new DfaState(i);
+    public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
+        DfaState r   = new DfaState(item);
         WASMA.reference = new TreeSet<State>(State.BY_DESC);    
         WASMA.fringerprint = new BitSet();
         if (this.getItem() == WASMA.itemsetDelimiter)       // this is an itemsetdelimiter (a #_State)
-            r.Align(this,ref,-1,compute_sprt);     
+            r.Align(this,ref,-1,item,compute_sprt);         // -1 means no reference effect 
         else for (State m :this.getRoots())                 // this is an itemsetState (an element of \sigma_State)
                 if (ref.states.containsKey(m.getNum()))
-                    r.Align(this,ref,m.getNum(),compute_sprt);   
+                    r.Align(this,ref,m.getNum(),item,compute_sprt);   
         return r;
     }
 }

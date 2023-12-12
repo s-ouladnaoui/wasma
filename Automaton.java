@@ -5,9 +5,9 @@ import java.util.HashMap;
 //import java.util.TreeMap;
 
 public class Automaton<T> {
-    int NbStates;
-    ArrayList<HashMap<Integer,Integer>> adjList;    /* the set of states of the weighted nfa */
-    HashMap<Integer,T> StateMap = new HashMap<>();  /* Map to hash the Object to its id */
+    private int NbStates;
+    private ArrayList<HashMap<Integer,Integer>> adjList;    /* the set of states of the weighted nfa */
+    private HashMap<Integer,T> StateMap = new HashMap<>();  /* Map to hash the Object to its id */
 
     public Automaton(){
         adjList = new ArrayList<>();
@@ -36,12 +36,17 @@ public class Automaton<T> {
         StateMap.put(i, s);
     }
 
+    public void removeMapState(int i) { StateMap.remove(i);}
+
+    public void DestructAdjList() { adjList = null;}
+
     public void Print(int node, BufferedWriter w, boolean write) throws IOException {   // print the Automaton and display the set of frequent patterns
         for(int e:WASMA.DFA.adjList.get(node).keySet()) {  
             WASMA.stk.push(e);
             if (e == WASMA.itemsetDelimiter && node != WASMA.DFAStartState) {
                 WASMA.nbFreqSequences++;              // a new frequent pattern
-                if (write) w.write(WASMA.stk.toString()+" : "+((DfaState)StateMap.get(adjList.get(node).get(e))).getSupport()+"\n");
+                if (write) 
+                    w.write(WASMA.stk.toString()+" : "+((DfaState)StateMap.get(adjList.get(node).get(e))).getSupport()+"\n");
             }
             Print(WASMA.DFA.adjList.get(node).get(e),w,write);
             WASMA.stk.pop();

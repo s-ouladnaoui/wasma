@@ -10,7 +10,7 @@
             "request": "launch",
             "mainClass": "WASMA",
             "projectName": "",
-            "args": "2 ../in.txt res"
+            "args": "2 ../in.txt res false"
         }
     ]
 }

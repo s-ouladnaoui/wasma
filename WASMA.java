@@ -7,7 +7,6 @@ public class WASMA {
     static Automaton<DfaState> DFA;                      
     static ArrayDeque<Integer> DFAqueue;                  /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
     static int NFAStartState = 0, DFAStartState = 0;      /* initial states of the wnfa/wdfa */
-    static BitSet fItems = new BitSet();                  /* the set F1 of frequent items as a bitset*/  
     static final String itemSeparator = " ";              /* separator in the input ds*/
     static final int itemsetDelimiter = -1,transactionDelimiter = -2; /* the endmark of an itemset/a sequence */
     static int min_supp = 1, nbFreqSequences = 0, code = 0, NbTransactions = 0;   /* the support threshold, number of frequent sequences in the dataset,  start code for reachability queries, number of transactions */
@@ -19,9 +18,9 @@ public class WASMA {
 
     public WASMA (int ms) {
         NFA = new Automaton<State>();  
-        NFA.StateMap.put(NFAStartState, new State(true)); 
+        NFA.newState(NFAStartState, new State(true)); 
         DFA = new Automaton<DfaState>(); 
-        DFA.StateMap.put(DFAStartState, new DfaState(0));   
+        DFA.newState(DFAStartState, new DfaState(0));   
         DFAqueue = new ArrayDeque<Integer>();
         min_supp = ms;
     }
@@ -29,13 +28,15 @@ public class WASMA {
     /* each state of the wNFA has a double integer code (start & end) used for reachability check */
     public void codage (int s) {     
         NFA.State(s).setStart(code++);
-        for (int q : NFA.getTransitions(s).values())  codage(q);
+        for (int q : NFA.getTransitions(s).values())  
+            codage(q);
         NFA.State(s).setEnd(code++);
     }
     /* ====================================== dataset loader ========================================================*/
     public void loadData(String inputfile) throws IOException {
         int  q, p, current_root = NFAStartState;
         p = current_root;
+        BitSet fItems = new BitSet();                  /* the set F1 of frequent items as a bitset*/  
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
         Stack<Integer> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
         StateStack.push(0);
@@ -89,8 +90,7 @@ public class WASMA {
                     case itemsetDelimiter :
                         if (NFA.getTransitions(p).containsKey(item)) q = NFA.getTransitions(p).get(item);
                         else {
-                            q = NFA.newTransition(p,item);
-                            NFA.newState(q, new State(true));
+                            NFA.newState(q = NFA.newTransition(p,item), new State(true));
                             NFA.State(q).setRoot(current_root);
                             if (lStates.containsKey(item)) lStates.get(item).add(q);
                             else {
@@ -109,13 +109,14 @@ public class WASMA {
                     default:
                         members.add(item);              // add the item to the alphabet
                         currentItems.set(item);         // set the item bit of the item 
-                        if (NFA.getTransitions(p).containsKey(item)) q = NFA.getTransitions(p).get(item);
+                        if (NFA.getTransitions(p).containsKey(item)) 
+                            q = NFA.getTransitions(p).get(item);
                         else {
-                            q = NFA.newTransition(p,item);
-                            NFA.newState(q, new State(false));
+                            NFA.newState(q = NFA.newTransition(p,item), new State(false));
                             NFA.State(q).setRoot(current_root);
                             NFA.State(p).follow.set(item);
-                            if (lStates.containsKey(item)) lStates.get(item).add(q);
+                            if (lStates.containsKey(item)) 
+                                lStates.get(item).add(q);
                             else {
                                 ArrayList<Integer> r = new ArrayList<Integer>();
                                 r.add(q);
@@ -154,8 +155,7 @@ public class WASMA {
                 if (fItems.get(i)){
                     reference = new TreeSet<State>(State.BY_DESC);    
                     fringerprint = new BitSet();
-                    item_state = DFA.newTransition(DFAStartState, i); 
-                    DFA.newState(item_state, s1 = new DfaState(i));
+                    DFA.newState(item_state = DFA.newTransition(DFAStartState, i), s1 = new DfaState(i));
                     s1.setSupport(alphabet.get(i));
                     s1.setRoot(DFAStartState);
                     order = 0;
@@ -165,64 +165,72 @@ public class WASMA {
                     }
                     DFAmap.put(i, new HashMap<>());
                     DFAqueue.add(item_state);
-                    int delim_state1;
+                    int delim_state1;       // delim_state1=Delta(item_state,#)
                     DFA.newState(delim_state1 = DFA.newTransition(item_state, itemsetDelimiter),
-                                s2 = s1.Delta(itemsetDelimiter, DFA.State(DFA.getTransitions(s1.getRoot()).get(itemsetDelimiter)), true));
+                                s2 = s1.Delta(itemsetDelimiter, DFA.State(DFA.getTransitions(DFAStartState).get(itemsetDelimiter)), false));
                     s2.setRoot(DFAStartState);
+                    s2.setSupport(alphabet.get(i));
                     DFAqueue.add(delim_state1); 
                 } else if (lStates.containsKey(i)) {        // remove data associated to infrequent items
-                    for (int j:lStates.get(i)) NFA.StateMap.remove(j); 
+                    for (int j:lStates.get(i)) 
+                        NFA.removeMapState(j); 
                     lStates.remove(i);
                     alphabet.remove(i);
                 }
         }
-            WASMA.NFA.adjList = null; // we don't need the NFA adj list all the required information are in the first states of the DFA
+            WASMA.NFA.DestructAdjList(); // we don't need the NFA adj list all the required information are in the first states of the DFA
         }
 
     public void Determinize() {
         int s;
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
-            DfaState res, res_delimiter, source_state = DFA.State(s); 
-            int item = source_state.getItem(), root = source_state.getRoot(), r1, r2;
-            HashMap<Integer,Integer> root_transitions = DFA.getTransitions(source_state.getRoot());
+            DfaState    res, 
+                        res_delimiter, 
+                        source_state = DFA.State(s); 
+            int item = source_state.getItem(), 
+                root = source_state.getRoot(), 
+                r1,
+                r2;
+            HashMap<Integer,Integer> root_transitions = DFA.getTransitions(root);
             for (int i = DFA.State(s).getFollow().nextSetBit(0); i > 0; i =  DFA.State(s).getFollow().nextSetBit(i + 1)) {
                 if (root_transitions.containsKey(i)){        /* extend the state by i iff the root contains a transition by i */
-/*================================================   d = delta(s,i)  ================================================================*/
+/*================================================   res = delta(s,i)  ================================================================*/
                     res = source_state.Delta(i,DFA.State(root_transitions.get(i)),true);
-                    if (res.getSupport() >= min_supp) {         /* res = delta(s,i) is frequent */
-                        if (!DFAmap.get(i).containsKey(fringerprint)){
-                            DFA.newState(r1 = DFA.newTransition(s, i), res);   // r1 the id number of the state res = delta(s,i)
-                            res.setRoot(item == itemsetDelimiter? s : root);
-                            DFAmap.get(i).put(fringerprint,r1);
+                    if (res.getSupport() >= min_supp) {                         /* res = delta(s,i) is frequent */
+                        if (!DFAmap.get(i).containsKey(fringerprint)){          /*  res is a new dfa state */
+                            DFA.newState(r1 = DFA.newTransition(s, i), res);    // r1 the id number of the state res = delta(s,i)
+                            res.setRoot(item == itemsetDelimiter? s : root);    // set the root of res to s if the later is a delimiterState otherwise to the root of s
+                            DFAmap.get(i).put(fringerprint,r1);                 // add res to the DFA map state using its fingerprint
 /*===================================================  res_delimiter = delta(res,itemsetDelimiter)  ===============================================================*/
                             DFA.newState(r2 = DFA.newTransition(r1, itemsetDelimiter),   // r2 the id number of the state res_delimiter = delta(res,#)
                                 res_delimiter = res.Delta(itemsetDelimiter,
                                 DFA.State(DFA.getTransitions((item == itemsetDelimiter?root_transitions.get(i):s)).get(itemsetDelimiter)),false)); 
                             res_delimiter.setRoot(res.getRoot());   
-                            res_delimiter.setSupport(res.getSupport());   //  d and dd have the same support (patterns sprt(p)= sprt(p#))
+                            res_delimiter.setSupport(res.getSupport());             //  res and res_delimter have the same support (patterns sprt(p)= sprt(p#))
+                            if (!res_delimiter.getFollow().isEmpty()) DFAqueue.add(r2); // if the 2 new states are extensibles add them to the queue
                             if (!res.getFollow().isEmpty()) DFAqueue.add(r1);
-                            if (!res_delimiter.getFollow().isEmpty()) DFAqueue.add(r2);
-                        } else DFA.newTransition(s, i,DFAmap.get(i).get(fringerprint));
-                    } else res = null;       // mark d so gc can recuperate its memory 
+                        } else DFA.newTransition(s, i,DFAmap.get(i).get(fringerprint)); // res already exists in the DFA so we do not create it but insert a new transition to it
+                    } else res = null;       // res is infrequent so mark it. gc can recuperate its memory 
                 }
             }
         }
     }
 
     public static void main(String[] args) throws IOException {
-        WASMA automate = new WASMA(Integer.parseInt(args[0]));              // min support
-        writer = new BufferedWriter( new FileWriter(args[2]));              // output file
-        automate.loadData(args[1]);                                         // input file
+        WASMA spm = new WASMA(Integer.parseInt(args[0]));               // min support
+        writer = new BufferedWriter( new FileWriter(args[2]));          // output file
+        spm.loadData(args[1]);                                          // input file
+        boolean print = Boolean.parseBoolean(args[3]);
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
-        automate.Determinize();
+        spm.Determinize();
         String endTime = String.format("%.2f ms",(System.nanoTime()-startTime)/1000000d);
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
-        DFA.Print(DFAStartState,writer,false);
-        writer.write("Min Supp: " + min_supp + String.format("relative: %.2f",(min_supp/NbTransactions))+"\nNb Frequent Sequences : " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
-        System.out.println("Min Supp: " + min_supp + "\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
+        DFA.Print(DFAStartState,writer,print);
+        writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
+        System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
         writer.close();
     }
 }
