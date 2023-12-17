@@ -2,37 +2,30 @@ import java.util.*;
 // one state of the wDFA is a set of states of the wNfa 
 public class DfaState {   
     int item; 
-    TreeMap<Integer,TreeSet<Integer>> states;       // the set of states categorized by their (sub)roots (subtree or region)
+    TreeSet<Integer> states;       // the set of states categorized by their (sub)roots (subtree or region)
     int root;
     BitSet follow;
     int support;                                                                                                                                                                                                                      
 
     public DfaState(int i){               
-        states = new TreeMap<Integer,TreeSet<Integer>>();
+        states = new TreeSet<Integer>();
         follow = new BitSet(); 
         item  =  i;
     }
 
     public int getItem(){ return item; }
 
-    public TreeSet<State> getStates(int root, int item){
-        TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        if (item == WASMA.itemsetDelimiter) 
-            for (int j:states.get(root)) 
-                r.add(WASMA.NFA.State(j));
-        else 
-            for (int j:states.get(root)) 
-                if (WASMA.NFA.State(j).getFollow().get(item))
-                    r.add(WASMA.NFA.State(j));
+    public TreeSet<State> getStates(boolean t){
+        TreeSet<State> r = (t)? new TreeSet<State>(State.BY_DESC):
+                                new TreeSet<State>(State.BY_ROOT);
+        for (int s:states) 
+            r.add(WASMA.NFA.State(s));
         return r;
     }
-
-    public TreeSet<State> getStates(int item){
-        TreeSet<State> r = (this.getItem() == WASMA.itemsetDelimiter)?
-                            new TreeSet<State>(State.BY_DESC):
-                            new TreeSet<State>(State.BY_START);
-        for (int root:states.keySet()) 
-            r.addAll(getStates(root, item));
+    public TreeSet<State> getStates(){
+        TreeSet<State> r = new TreeSet<State>(State.BY_START);
+        for (int s:states) 
+            r.add(WASMA.NFA.State(s));
         return r;
     }
 
@@ -48,13 +41,6 @@ public class DfaState {
 
     public void setRoot(int r){ root = r;}
 
-    public TreeSet<State> getRoots() { 
-        TreeSet<State> r = new TreeSet<State>(State.BY_START);
-        for (int i:states.keySet()) 
-            r.add(WASMA.NFA.State(i));
-        return r;
-    }
-
     public String toString(){
         return states.toString();
     }
@@ -67,46 +53,37 @@ public class DfaState {
             if (this.getItem() != WASMA.itemsetDelimiter) 
                 WASMA.fringerprint.set(tmp.getOrder()); 
         }                
-        if (states.containsKey(tmp.getRoot())) 
-            states.get(tmp.getRoot()).add(s);
-        else {
-            TreeSet<Integer> ss = new TreeSet<Integer>();
-            ss.add(s);
-            states.put(tmp.getRoot(), ss);
-        }
-        this.setFollow(tmp.getFollow());
+        states.add(s);
+        if (!tmp.getFollow().isEmpty()) this.setFollow(tmp.getFollow());
     }
     
-    public void Align(DfaState s, DfaState r, int ref, int item, boolean computeSupport) {
+    public void Align(DfaState s, DfaState r, int item, boolean t, boolean computeSupport) {
         State x, y;
-        Iterator<State> xit = ((ref == -1)?s.getStates(item):s.getStates(ref,item)).iterator();
+        Iterator<State> xit = s.getStates(t).iterator();
         if (xit.hasNext()) x = xit.next(); else return;
-        Iterator<State> yit = ((ref == -1)?r.getRoots():r.getStates(ref,-1)).iterator();
+        Iterator<State> yit = ((t)?r.getStates():r.getStates(false)).iterator();
         if (yit.hasNext()) y = yit.next(); else return;
         do {
-            if (x.getEnd() < y.getStart()) if (xit.hasNext() )  // if state x is less (at the left) of state y advance in x iterator
-                x = xit.next(); else break;
-            else
-            { 
-                if (x == y || y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
-                    if (ref == -1)   
-                        for (State m :r.getStates(y.getNum(),-1))   // case where y is a subroot: insert all its descendents
-                            addState(m.getNum(), computeSupport);
-                    else addState(y.getNum(), computeSupport);
+            if (x.getEnd() < y.getStart()) 
+                if (xit.hasNext() )  // if state x is less (at the left) of state y advance in x iterator
+                    x = xit.next(); 
+                else break;
+            else { 
+                if (y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
+                    addState(y.getNum(), computeSupport);      // case of an itemstateset extension
                 if (yit.hasNext()) y = yit.next(); else break;
             }
         } while (true);
     }
 
     public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
-        DfaState r   = new DfaState(item);
+        DfaState r = new DfaState(item);
         WASMA.reference = new TreeSet<State>(State.BY_DESC);    
         WASMA.fringerprint = new BitSet();
-        if (this.getItem() == WASMA.itemsetDelimiter)       // this is an itemsetdelimiter (a #_State)
-            r.Align(this,ref,-1,item,compute_sprt);         // -1 means no reference effect 
-        else for (State m :this.getRoots())                 // this is an itemsetState (an element of \sigma_State)
-                if (ref.states.containsKey(m.getNum()))
-                    r.Align(this,ref,m.getNum(),item,compute_sprt);   
+        if (this.getItem() == WASMA.itemsetDelimiter)           // this is an itemsetdelimiter (a #_State)
+            r.Align(this,ref,item,true,compute_sprt);         
+        else 
+            r.Align(this,ref,item,false,compute_sprt);   
         return r;
     }
 }

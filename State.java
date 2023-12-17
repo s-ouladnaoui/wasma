@@ -3,6 +3,7 @@ import java.util.*;
 public class State {
     public static final Comparator<State> BY_START = new ByStart();  // comparator using start number
     public static final Comparator<State> BY_DESC = new ByDesc();   // coparator using descendance relation
+    public static final Comparator<State> BY_ROOT = new ByRoot();   // coparator using descendance relation
     boolean type;                                           /* flag : the state is an itemset delimiter */
     int start, end;                                         /* codes for reachability (descendence) queries */
     int weight,                                             /* the frequency of the prefix from the startstate to this state */ 
@@ -25,6 +26,15 @@ public class State {
             if (p.start > q.end) return +1;                     // p is at the right of q so is greater than q
             return 0;                                           // p and q have a descendance relationship, they are equal
         }                          
+    }
+
+    private static class ByRoot implements Comparator<State>  // the natural state order is based on start code used in DFA state alignment
+    {
+        public int compare(State p,State q){
+            if (p.root < q.root) return -1;
+            else if (p.root > q.root) return +1;
+            else return p.start - q.start;         
+        }
     }
 
     public State(boolean stateType) {

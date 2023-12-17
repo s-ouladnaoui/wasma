@@ -36,13 +36,13 @@ public class WASMA {
     public void loadData(String inputfile) throws IOException {
         int  q, p, current_root = NFAStartState;
         p = current_root;
-        BitSet fItems = new BitSet();                  /* the set F1 of frequent items as a bitset*/  
+        BitSet fItems = new BitSet();                           /* the set F1 of frequent items as a bitset*/  
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
-        Stack<Integer> StateStack = new Stack<>();            // to track the follow items (as a bitsets)
+        Stack<Integer> StateStack = new Stack<>();              // to track the follow items (as a bitsets)
         StateStack.push(0);
-        HashMap<Integer, Integer> alphabet = new HashMap<>();    /* The items of the dataset and the associated supports */
+        HashMap<Integer, Integer> alphabet = new HashMap<>();   /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
-        BitSet currentItems = new BitSet();  /* bitset of the frequent items (the set F1) */
+        BitSet currentItems = new BitSet();                     
         HashMap<Integer,ArrayList<Integer>> lStates = new HashMap<Integer,ArrayList<Integer>>();
         String transaction;
         long startTime = System.nanoTime();
@@ -108,7 +108,7 @@ public class WASMA {
                         break;
                     default:
                         members.add(item);              // add the item to the alphabet
-                        currentItems.set(item);         // set the item bit of the item 
+                        currentItems.set(item);         // set the item bit
                         if (NFA.getTransitions(p).containsKey(item)) 
                             q = NFA.getTransitions(p).get(item);
                         else {
@@ -151,7 +151,7 @@ public class WASMA {
                 NFA.State(s).setOrder(order++);          // used to optimize memory requirment of the Bitset encoding of statsets
             }
             // Prepare the first states of the DFA: the set of transitions from the initial state of the DFA by the frequent items (the F1 set) 
-            for ( int i = 0; i < fItems.length(); i++) {
+            for (int i = fItems.nextSetBit(0); i > 0; i = fItems.nextSetBit(i + 1)) {
                 if (fItems.get(i)){
                     reference = new TreeSet<State>(State.BY_DESC);    
                     fringerprint = new BitSet();
@@ -208,8 +208,8 @@ public class WASMA {
                                 DFA.State(DFA.getTransitions((item == itemsetDelimiter?root_transitions.get(i):s)).get(itemsetDelimiter)),false)); 
                             res_delimiter.setRoot(res.getRoot());   
                             res_delimiter.setSupport(res.getSupport());             //  res and res_delimter have the same support (patterns sprt(p)= sprt(p#))
-                            if (!res_delimiter.getFollow().isEmpty()) DFAqueue.add(r2); // if the 2 new states are extensibles add them to the queue
                             if (!res.getFollow().isEmpty()) DFAqueue.add(r1);
+                            if (!res_delimiter.getFollow().isEmpty()) DFAqueue.add(r2); // if the 2 new states are extensibles add them to the queue
                         } else DFA.newTransition(s, i,DFAmap.get(i).get(fringerprint)); // res already exists in the DFA so we do not create it but insert a new transition to it
                     } else res = null;       // res is infrequent so mark it. gc can recuperate its memory 
                 }
@@ -229,8 +229,8 @@ public class WASMA {
         long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
         String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
         DFA.Print(DFAStartState,writer,print);
-        writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
-        System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
+        writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.4f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
+        System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.4f",( (double) min_supp/NbTransactions))+")\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime + "\nMemory requirement: " + mem+"\n");
         writer.close();
     }
 }

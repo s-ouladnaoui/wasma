@@ -2,7 +2,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.TreeMap;
 
 public class Automaton<T> {
     private int NbStates;
