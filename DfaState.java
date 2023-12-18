@@ -22,6 +22,17 @@ public class DfaState {
             r.add(WASMA.NFA.State(s));
         return r;
     }
+    public TreeSet<State> getStates(boolean t,int i){
+        TreeSet<State> r = (t)? new TreeSet<State>(State.BY_DESC):
+                                new TreeSet<State>(State.BY_ROOT);
+        if (i == WASMA.itemsetDelimiter)
+            for (int s:states) 
+                r.add(WASMA.NFA.State(s));
+        else for (int s:states) 
+                if (WASMA.NFA.State(s).getFollow().get(i)) 
+                    r.add(WASMA.NFA.State(s));
+        return r;
+    }
     public TreeSet<State> getStates(){
         TreeSet<State> r = new TreeSet<State>(State.BY_START);
         for (int s:states) 
@@ -59,31 +70,37 @@ public class DfaState {
     
     public void Align(DfaState s, DfaState r, int item, boolean t, boolean computeSupport) {
         State x, y;
-        Iterator<State> xit = s.getStates(t).iterator();
+        boolean possible = true;
+        Iterator<State> xit = s.getStates(t,item).iterator();
         if (xit.hasNext()) x = xit.next(); else return;
         Iterator<State> yit = ((t)?r.getStates():r.getStates(false)).iterator();
         if (yit.hasNext()) y = yit.next(); else return;
         do {
-            if (x.getEnd() < y.getStart()) 
-                if (xit.hasNext() )  // if state x is less (at the left) of state y advance in x iterator
-                    x = xit.next(); 
-                else break;
-            else { 
-                if (y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
-                    addState(y.getNum(), computeSupport);      // case of an itemstateset extension
-                if (yit.hasNext()) y = yit.next(); else break;
+            while (possible && (x.root == y.root || t)){
+                if (x.getEnd() < y.getStart()) 
+                    if (xit.hasNext())  // if state x is less (at the left) of state y advance in x iterator
+                        x = xit.next(); 
+                    else possible = false;
+                else { 
+                    if (y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
+                        addState(y.getNum(), computeSupport);      // case of an itemstateset extension
+                    if (yit.hasNext()) y = yit.next(); else  possible = false;
+                }
             }
-        } while (true);
+            if (y.root < x.root) {
+                if (yit.hasNext()) y = yit.next(); else possible = false;
+            }
+            if (x.root < y.root) {
+                if (xit.hasNext()) x = xit.next(); else possible = false;
+            }
+        } while (possible);           
     }
 
     public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
         DfaState r = new DfaState(item);
         WASMA.reference = new TreeSet<State>(State.BY_DESC);    
         WASMA.fringerprint = new BitSet();
-        if (this.getItem() == WASMA.itemsetDelimiter)           // this is an itemsetdelimiter (a #_State)
-            r.Align(this,ref,item,true,compute_sprt);         
-        else 
-            r.Align(this,ref,item,false,compute_sprt);   
+        r.Align(this,ref,item,this.getItem() == WASMA.itemsetDelimiter,compute_sprt);           
         return r;
     }
 }
