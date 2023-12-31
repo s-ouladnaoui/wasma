@@ -9,18 +9,15 @@ public class State {
     int weight,                                             /* the frequency of the prefix from the startstate to this state */ 
         root;                                               /* the root of the subtree: the begining of the itemset that contains this state */
     BitSet follow;                                          /* the following items in the NFAutomaton */
-    int num,                                                /* index in the NFA adjList */
-        ord;                                                /* id in the "Compact" BitSet representing the set of states associated with the item */
+    int    ord;                                                /* id in the "Compact" BitSet representing the set of states associated with the item */
     
-    private static class ByStart implements Comparator<State>  // the natural state order is based on start code used in DFA state alignment
-    {
+    private static class ByStart implements Comparator<State> {  // the natural state order is based on start code used in DFA state alignment
         public int compare(State p,State q){
             return p.getStart() - q.getStart();         
         }
     }
     
-    private static class ByDesc implements Comparator<State>    // the second order is based on reachability relation used in support calculation 
-    {
+    private static class ByDesc implements Comparator<State> {   // the second order is based on reachability relation used in support calculation 
         public int compare(State p,State q){
             if (p.getEnd() < q.getStart()) return -1;                     // p is at the left of q so is less than q
             if (p.getStart() > q.getEnd()) return +1;                     // p is at the right of q so is greater than q
@@ -28,8 +25,7 @@ public class State {
         }                          
     }
 
-    private static class ByRoot implements Comparator<State>  // the root ordering followed by the natural state order (start code) used in DFA state alignment
-    {
+    private static class ByRoot implements Comparator<State> {  // the root ordering followed by the natural state order (start code) used in DFA state alignment
         public int compare(State p,State q){
             if (p.getRoot() != q.getRoot()) return p.getRoot() - q.getRoot();
             else return p.getStart()- q.getStart();         
@@ -40,10 +36,6 @@ public class State {
         type = stateType;
         follow = new BitSet();
     }
-
-    public int getNum(){ return num;}
-
-    public void setNum(int n) { num = n;}
 
     public int getOrder(){ return ord;}
 
@@ -71,5 +63,5 @@ public class State {
 
     public void setRoot(int r) { root = r;}
 
-    public String toString() { return ((Integer) num).toString();}
+    public String toString() { return ((Integer) start).toString();}
 }

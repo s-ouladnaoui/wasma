@@ -13,8 +13,7 @@ public class Automaton<T> {
         adjList.add(new HashMap<Integer,Integer>());
     }
 
-    public T State(int i) {return StateMap.get(i);}
-
+    public T State(int i) { return StateMap.get(i);}
 
     public HashMap<Integer,Integer> getTransitions(int state){
         return adjList.get(state);
@@ -36,8 +35,6 @@ public class Automaton<T> {
     }
 
     public void removeMapState(int i) { StateMap.remove(i);}
-
-    public void DestructAdjList() { adjList = null;}
 
     public void Print(int node, BufferedWriter w, boolean write) throws IOException {   // print the Automaton and display the set of frequent patterns
         for(int e:WASMA.DFA.adjList.get(node).keySet()) {  
