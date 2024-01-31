@@ -35,6 +35,7 @@ public class State {
     public State(boolean stateType) {
         type = stateType;
         follow = new BitSet();
+        ord = -1;
     }
 
     public int getOrder(){ return ord;}
@@ -64,4 +65,8 @@ public class State {
     public void setRoot(int r) { root = r;}
 
     public String toString() { return ((Integer) start).toString();}
+
+    public int compare(State y,Comparator<State> c) {
+        return this.compare(y, c);
+    }
 }
