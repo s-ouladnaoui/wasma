@@ -46,9 +46,9 @@ public class WASMA {
         HashMap<Integer,Integer> Order = new HashMap<>();
         DfaState delim_state = new DfaState(itemsetDelimiter), r = null;
         delim_state.states.add(NFA.State(0));
-        String transaction;
         int x, y, j, currentItemset, ord, item;
         boolean vnew = false;
+        String transaction;
         String[] itemsets, items;
         long startTime = System.nanoTime();
         while ((transaction = in.readLine()) != null) {   
@@ -165,10 +165,6 @@ public class WASMA {
             writer.write("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates+"\n");
             System.out.println("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions);
             System.out.println("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates);
-            Order = null;
-            alphabet = null;
-            members = null;
-            lStates = null;
             WASMA.NFA = null; // we don't need the NFA all the required information are in the first states of the DFA
     }
 
@@ -187,7 +183,7 @@ public class WASMA {
                         if (!DFAmap.get(i).containsKey(fingerprint)){          /*  res is a new dfa state */
                             DFA.newState(r1 = DFA.newTransition(s, i), res);    // r1 the id number of the state res = delta(s,i)
                             res.setRoot(source_state.IsDelimiterState()? s : root);    // set the root of res to s if the later is a delimiterState otherwise to the root of s
-                            if (source_state.IsDelimiterState()) DFAmap.get(i).put(fingerprint,r1);                 // add res to the DFA map state using its fingerprint
+                            DFAmap.get(i).put(fingerprint,r1);                 // add res to the DFA map state using its fingerprint
 /*===================================================  res_delimiter = delta(res,itemsetDelimiter)  ===============================================================*/
                             DFA.newState(r2 = DFA.newTransition(r1, itemsetDelimiter),   // r2 the id number of the state res_delimiter = delta(res,#)
                                 res_delimiter = res.Delta(itemsetDelimiter,

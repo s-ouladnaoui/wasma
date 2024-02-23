@@ -65,24 +65,6 @@ public class DfaState {
         return res;         
     }
 
-    /*public DfaState AlignLocal_item(DfaState s,DfaState ref, int item){
-        DfaState res = new DfaState(item);
-        Collections.sort(ref.states,State.BY_START);
-        State sentinely = null;
-        Boolean first = true;
-        for (State t : ref.states)
-            if (t.getFollow().get(s.item)) 
-                    if (first) {
-                            res.addState(t,item,true);
-                            sentinely = t;
-                            first = false;
-                    } else if (!(t.getStart() > sentinely.getStart() && t.getEnd() < sentinely.getEnd())) {
-                                res.addState(t,item,true);            
-                                sentinely = t;
-                            }
-        return res;   
-    }*/
-
     public DfaState AlignLocal_item(DfaState s, DfaState ref, int item) {
         DfaState res = new DfaState(item);
         State x, y;
@@ -108,7 +90,7 @@ public class DfaState {
     }
 
    
-    public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference in the alignment
+    public DfaState Delta(int item, DfaState ref, boolean compute_sprt) {    // r = delta(s,i) taking ref as a reference in the alignment
         // delta computation is based on the alignment between two sorted sets of states those in this and ref
         WASMA.fingerprint = new BitSet();
         WASMA.support_computation_sentinel = new TreeSet<State>(State.BY_DESC);
@@ -116,15 +98,17 @@ public class DfaState {
             Collections.sort(this.states,State.BY_START);  
             Collections.sort(ref.states,State.BY_START);
             return AlignGlobal(this,ref,item); 
-        }
-        else {                          // local alignment we use root subtree (local) ordering
+        } else {                          // local alignment we use root subtree (local) ordering
             Collections.sort(this.states,State.BY_ROOT);  
             Collections.sort(ref.states,State.BY_ROOT);
-            return AlignLocal_item(this,ref,item);  
-        }
-    }
-}   
-  
+            return AlignLocal_item(this,ref,item);
+        }  
+    }  
+
+}
+
+
+
 
 
 
@@ -133,7 +117,31 @@ public class DfaState {
 
 
 /*  ==================================================================================================
-    public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
+
+
+    /*public DfaState AlignLocal_item(DfaState s,DfaState ref, int item){
+        DfaState res = new DfaState(item);
+        Collections.sort(ref.states,State.BY_START);
+        State sentinely = null;
+        Boolean first = true;
+        for (State t : ref.states)
+            if (t.getFollow().get(s.item)) 
+                    if (first) {
+                            res.addState(t,item,true);
+                            sentinely = t;
+                            first = false;
+                    } else if (!(t.getStart() > sentinely.getStart() && t.getEnd() < sentinely.getEnd())) {
+                                res.addState(t,item,true);            
+                                sentinely = t;
+                            }
+        return res;   
+    }
+
+
+
+
+
+public DfaState Delta(int item, DfaState ref, boolean compute_sprt){    // r = delta(s,i) taking ref as a reference for alignment
         // delta computation is based on the alignment between two sorted sets of states those in this and ref
         WASMA.fringerprint = new BitSet();
         //WASMA.reference = new TreeSet<State>(State.BY_DESC);  // used for support computation (Only elements inserable in this reference sorted collection can contribute to support)  
