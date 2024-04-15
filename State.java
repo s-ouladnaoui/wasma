@@ -4,12 +4,12 @@ public class State {
     public static final Comparator<State> BY_START = new ByStart();  // comparator using start code 
     public static final Comparator<State> BY_DESC = new ByDesc();   // comparator using descendance relation
     public static final Comparator<State> BY_ROOT = new ByRoot();   // comparator using the root and then start code 
-    boolean type;                                           /* flag: the state is an itemset delimiter when is true*/
-    int start, end;                                         /* codes for reachability (descendence) queries */
-    int weight,                                             /* the frequency of the prefix from the startstate to this state */ 
-        root;                                               /* the root of the subtree: the begining of the itemset that contains this state */
-    BitSet follow;                                          /* the following items in the NFAutomaton */
-    int    ord;                                                /* id in the "Compact" BitSet representing the set of states associated with the item */
+    boolean type;                                            /* flag: the state is an itemset delimiter when is true*/
+    int start, end;                                          /* codes for reachability (descendence) queries */
+    int weight,                                              /* the frequency of the prefix from the startstate to this state */ 
+        root;                                                /* the root of the subtree: the begining of the itemset that contains this state */
+    BitSet follow;                                           /* the following items in the NFAutomaton */
+    int    ord;                                              /* id in the "Compact" BitSet representing the set of states associated with the item */
     
     private static class ByStart implements Comparator<State> {  // the natural state order is based on start code used in DFA state alignment
         public int compare(State p,State q){

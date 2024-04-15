@@ -3,7 +3,7 @@ import java.util.*;
 public class DfaState {  
     int item; 
     ArrayList<State> states;       // the set of states composing one state of the DFA
-    int root;
+    int reference;
     BitSet follow;
     int support;                                                                                                                                                                                                                      
     public DfaState(int i) {      
@@ -24,9 +24,9 @@ public class DfaState {
 
     public void setFollow(BitSet b){ follow.or(b);}
 
-    public int getRoot(){ return root;}
+    public int getRef(){ return reference;}
 
-    public void setRoot(int r){ root = r;}
+    public void setRef(int r){ reference = r;}
 
     public String toString(){ return states.toString(); }
 
@@ -52,7 +52,7 @@ public class DfaState {
         if (yit.hasNext()) y = yit.next(); else return res;
         while (possible){ 
             if (x.getStart() > sentinelx.getStart() && x.getEnd() < sentinelx.getEnd()) 
-                if (xit.hasNext()) { x = xit.next();   continue; } else possible = false;
+                if (xit.hasNext()) { x = xit.next(); continue; } else possible = false;
             else  sentinelx = x;
             if (x.getEnd() < y.getStart())                                  // if state x is less (at the left) of state y advance in x iterator       
                 if (xit.hasNext()) x = xit.next(); else possible = false; 

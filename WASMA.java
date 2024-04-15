@@ -151,12 +151,12 @@ public class WASMA {
                 DFA.newState(item_state = DFA.newTransition(DFAStartState, i), lStates.get(i));
                 s1 = DFA.State(item_state);
                 s1.setSupport(alphabet.get(i));
-                s1.setRoot(DFAStartState);
+                s1.setRef(DFAStartState);
                 DFAmap.put(i, new HashMap<>());
                 DFAqueue.add(item_state);
                 DFA.newState(delim_state$ = DFA.newTransition(item_state, itemsetDelimiter),    // delim_state$ = Delta(item_state,#)
                                 s2 = s1.Delta(itemsetDelimiter, DFA.State(DFA.getTransitions(DFAStartState).get(itemsetDelimiter)), false));
-                s2.setRoot(DFAStartState);
+                s2.setRef(DFAStartState);
                 s2.setSupport(alphabet.get(i));
                 DFAqueue.add(delim_state$); 
             }
@@ -173,8 +173,8 @@ public class WASMA {
         while (!DFAqueue.isEmpty()) {
             s = DFAqueue.remove();
             DfaState source_state = DFA.State(s), res, res_delimiter ; 
-            int root = source_state.getRoot(), r1, r2;
-            HashMap<Integer,Integer> root_transitions = DFA.getTransitions(root);
+            int ref = source_state.getRef(), r1, r2;
+            HashMap<Integer,Integer> root_transitions = DFA.getTransitions(ref);
             for (int i = source_state.getFollow().nextSetBit(0); i >= 0; i =  source_state.getFollow().nextSetBit(i + 1)) {
                 if (i > source_state.item && root_transitions.containsKey(i)){        /* extend the state by i iff the root contains a transition by i */
 /*================================================   res = delta(s,i)  ================================================================*/
@@ -182,13 +182,13 @@ public class WASMA {
                     if (res.getSupport() >= min_supp) {                         /* res = delta(s,i) is frequent */
                         if (!DFAmap.get(i).containsKey(fingerprint)){          /*  res is a new dfa state */
                             DFA.newState(r1 = DFA.newTransition(s, i), res);    // r1 the id number of the state res = delta(s,i)
-                            res.setRoot(source_state.IsDelimiterState()? s : root);    // set the root of res to s if the later is a delimiterState otherwise to the root of s
+                            res.setRef(source_state.IsDelimiterState()? s : ref);    // set the root of res to s if the later is a delimiterState otherwise to the root of s
                             DFAmap.get(i).put(fingerprint,r1);                 // add res to the DFA map state using its fingerprint
 /*===================================================  res_delimiter = delta(res,itemsetDelimiter)  ===============================================================*/
                             DFA.newState(r2 = DFA.newTransition(r1, itemsetDelimiter),   // r2 the id number of the state res_delimiter = delta(res,#)
                                 res_delimiter = res.Delta(itemsetDelimiter,
                                 DFA.State(DFA.getTransitions((source_state.IsDelimiterState()?root_transitions.get(i):s)).get(itemsetDelimiter)),false)); 
-                            res_delimiter.setRoot(res.getRoot());   
+                            res_delimiter.setRef(res.getRef());   
                             res_delimiter.setSupport(res.getSupport());             //  res and res_delimter have the same support (patterns sprt(p)= sprt(p#))
                             if (!res.getFollow().isEmpty()) DFAqueue.add(r1);
                             if (!res_delimiter.getFollow().isEmpty()) DFAqueue.add(r2); // if the 2 new states are extensibles add them to the queue
