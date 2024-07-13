@@ -39,7 +39,7 @@ public class DfaState {
             if (s.getOrder() >= 0) WASMA.fingerprint.set(s.getOrder());
             if (compute_weight) this.setSupport(s.getWeight());
         }
-    }
+    }   
     
     public DfaState AlignGlobal(DfaState s, DfaState ref, int item) {
         DfaState res = new DfaState(item);
