@@ -29,7 +29,7 @@ public class WASMA {
         NFA.State(s).setStart(code++);
         for (int q : NFA.getTransitions(s).values())  
             codage(q);
-        NFA.State(s).setEnd(code++);
+        NFA.State(s).setEnd(code);
     }
 
     /* ====================================== The Dataset Loader  (construction of the wNF Automaton) ========================================================*/
