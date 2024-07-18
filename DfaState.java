@@ -43,24 +43,10 @@ public class DfaState {
     
     public DfaState AlignGlobal(DfaState s, DfaState ref, int item) {
         DfaState res = new DfaState(item);
-        State x, y;
-        boolean possible = true;
-        Iterator<State> xit = s.states.iterator(),
-                        yit = ref.states.iterator(); 
-        if (xit.hasNext()) x = xit.next(); else return res;
-        State sentinelx = x;
-        if (yit.hasNext()) y = yit.next(); else return res;
-        while (possible){ 
-            if (x.getStart() > sentinelx.getStart() && x.getEnd() < sentinelx.getEnd()) 
-                if (xit.hasNext()) { x = xit.next(); continue; } else possible = false;
-            else  sentinelx = x;
-            if (x.getEnd() < y.getStart())                                  // if state x is less (at the left) of state y advance in x iterator       
-                if (xit.hasNext()) x = xit.next(); else possible = false; 
-            else { 
-                if (y.getStart() > x.getStart() && y.getEnd() < x.getEnd())  // if y is descendent from x add it to the result
-                    res.addState(y,true);            
-                if (yit.hasNext()) y = yit.next();else possible = false;      // in other cases advance in y iterator                         
-            }        
+        for (State x:s.states){
+            
+
+
         }
         return res;         
     }
@@ -95,12 +81,8 @@ public class DfaState {
         WASMA.fingerprint = new BitSet();
         WASMA.support_computation_sentinel = new TreeSet<State>(State.BY_DESC);
         if (this.IsDelimiterState()) {     // global alignment both source and destination statesets are ordered using start id
-            Collections.sort(this.states,State.BY_START);  
-            Collections.sort(ref.states,State.BY_START);
             return AlignGlobal(this,ref,item); 
         } else {                          // local alignment we use root subtree (local) ordering
-            Collections.sort(this.states,State.BY_ROOT);  
-            Collections.sort(ref.states,State.BY_ROOT);
             return AlignLocal_item(this,ref,item);
         }  
     }  
