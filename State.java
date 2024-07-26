@@ -1,20 +1,20 @@
 import java.util.*;   
 /* Weighted NFA State Class */
 public class State {
-    public static final Comparator<State> BY_START = new ByStart();  // comparator using start code 
+    public static final Comparator<State> BY_START = new BygStart();  // comparator using global start code 
     public static final Comparator<State> BY_DESC = new ByDesc();   // comparator using descendance relation
     public static final Comparator<State> BY_ROOT = new ByRoot();   // comparator using the root and then start code 
-    public static final Comparator<State> BY_lSTAET = new BylStart();   // comparator using the root and then start code 
+    public static final Comparator<State> BY_lSTART = new BylStart();   // comparator using local start code 
     int item;
     boolean type;                                            /* flag: the state is an itemset delimiter when is true*/
-    int gstart, lstart, gend,lend;            /* codes for reachability (descendence) queries */
-                                                // g: for global coding ; l: for local coding
+    int gstart, gend, lstart, lend;            /* codes for reachability (descendence) queries. g: for global coding ; l: for local coding */
     int weight,                                              /* the frequency of the prefix from the startstate to this state */ 
+        delimiter,                                             /* next Statedelimiter */
         root;                                                /* the root of the subtree: the begining of the itemset that contains this state */
     BitSet follow;                                           /* the following items in the NFAutomaton */
     //int    ord;                                              /* id in the "Compact" BitSet representing the set of states associated with the item */
     
-    private static class ByStart implements Comparator<State> {  // the natural state order is based on start code used in DFA state alignment
+    private static class BygStart implements Comparator<State> {  // the natural state order is based on start code used in DFA state alignment
         public int compare(State p,State q){
             return p.getStart() - q.getStart();         
         }
@@ -54,17 +54,17 @@ public class State {
 
     public int getWeight() { return weight;}
 
-    public void setWeight(int w){ weight += w;}
+    public void setWeight(int w) { weight += w;}
 
     public boolean getType() { return type;}
   
     public int getStart() { return gstart;}
 
-    public void setStart(int s) { gstart = s;}
+    public void setgStart(int s) { gstart = s;}
 
     public int getEnd() { return gend;}
 
-    public void setEnd(int e) { gend = e;}
+    public void setgEnd(int e) { gend = e;}
     public void setlEnd(int e) { lend = e;}
 
     public BitSet getFollow() { return follow;}
