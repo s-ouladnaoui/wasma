@@ -1,8 +1,24 @@
 Database: ../in.txt; Alphabet size: 3; Database size: 4
-Preprocessing time: 4 ms
+Preprocessing time: 2 ms
 NFA States: 23
+[1, -1] : 4
+[1, -1, 1, -1] : 2
+[1, -1, 2, -1] : 3
+[1, -1, 3, -1] : 2
+[1, 2, -1] : 2
+[1, 2, -1, 2, -1] : 2
+[1, 2, -1, 3, -1] : 2
+[1, 3, -1] : 3
+[1, 3, -1, 2, -1] : 2
+[2, -1] : 4
+[2, -1, 1, -1] : 3
+[2, -1, 1, 3, -1] : 2
+[2, -1, 2, -1] : 2
+[2, -1, 3, -1] : 3
+[3, -1] : 4
+[3, -1, 2, -1] : 2
 Min Supp: 2 (relative : 0,500)
 DFA States: 26
 Nb Frequent Sequences: 16
-Mining time: 712504,53 ms
-Memory requirement: 1,92 mb
+Mining time: 1,15 ms
+Memory requirement: 0,48 mb
