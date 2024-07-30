@@ -73,23 +73,28 @@ public class WASMA {
         int  p, q, current_root = NFAStartState;
         p = current_root;
         BufferedReader in = new BufferedReader(new FileReader(inputfile));
-        HashMap<Integer,Stack<Integer>> StateStack = new HashMap<>();              // to track the follow items (as a bitsets)
-        StateStack.put(itemsetDelimiter,new Stack<>());
-        StateStack.get(itemsetDelimiter).push(0);
+        Stack<Integer> StateStack = new Stack<>();              // to track the follow items (as a bitsets)
+        StateStack.push(0);
         HashMap<Integer, Integer> alphabet = new HashMap<>();   /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
-        int x, y, z, t, j, currentItemset, item;
+        int y, z, t, j, currentItemset, item;
+        HashMap<Integer,Integer> x;
         String transaction;
         String[] itemsets, items;
         long startTime = System.nanoTime();
-        while ((transaction = in.readLine()) != null) {   
+        while ((transaction = in.readLine()) != null) { 
+            x = new HashMap<Integer,Integer>();
             itemsets = transaction.substring(0,transaction.length()-6).split("-1");
             j = 0;
             ArrayList<BitSet> sequenceBitset = new ArrayList<BitSet>();
             for (String itemset:itemsets) {
                 sequenceBitset.add(new BitSet());
-                for(String i:itemset.trim().split(" ")) 
-                    sequenceBitset.get(j).set(Integer.parseInt(i)); 
+                for(String i:itemset.trim().split(" ")) { 
+                    int o = Integer.parseInt(i);
+                    sequenceBitset.get(j).set(o); 
+                    members.add(o);
+                    x.put(o, transactionDelimiter);
+                }
                 j++;
             }
             currentItemset = 0;
@@ -100,19 +105,17 @@ public class WASMA {
                     case transactionDelimiter:
                         NbTransactions++;
                         // This loop collect next items for each itemsetDelimiterState in a bottom up fashion 
-                        y = StateStack.get(itemsetDelimiter).pop();               // the last stateDelimiter in the current sequence
+                        y = StateStack.pop();               // the last stateDelimiter in the current sequence
                         while (--currentItemset >= 0) {
                             for (int i = sequenceBitset.get(currentItemset).length(); (i = sequenceBitset.get(currentItemset).previousSetBit(i-1)) >= 0;) {
-                                // operate on index i here 
-                                if (!StateStack.get(i).isEmpty()) x = StateStack.get(i).pop();
-                                else x = -1;
-                                if (!StateStack.get(i).isEmpty()) {
-                                    t = StateStack.get(i).pop();
-                                    if (x > 0) NFA.State(t).setFollow(NFA.State(x).getFollow()); // the next follow items
-                                    }
-                                t = x;
+                                if (x.get(i) == transactionDelimiter) x.put(i,StateStack.pop());
+                                else {
+                                    z = StateStack.pop();
+                                    NFA.State(z).setFollow(NFA.State(x.get(i)).getFollow()); // the next follow items  
+                                    x.put(i,z);
+                                }
                             }
-                            z = StateStack.get(itemsetDelimiter).pop();               // the last stateDelimiter in the current sequence
+                            z = StateStack.pop();               // the last stateDelimiter in the current sequence
                             NFA.State(z).setFollow(sequenceBitset.get(currentItemset)); // the local follow items
                             NFA.State(z).setFollow(NFA.State(y).getFollow()); // the next follow items
                             y = z;
@@ -128,7 +131,7 @@ public class WASMA {
                             }
                         }
                         p = current_root = NFAStartState;
-                        StateStack.get(itemsetDelimiter).push(p);
+                        StateStack.push(p);
                         members.clear();
                         break;
                     case itemsetDelimiter : 
@@ -138,13 +141,13 @@ public class WASMA {
                             NFA.State(q).setRoot(current_root);
                         }
                         NFA.State(q).setWeight(1);
-                        StateStack.get(itemsetDelimiter).push(q);
+                        StateStack.push(q);
                         current_root = q;
                         p = q;
                         currentItemset++;
                         break;
                     default :
-                        members.add(item);                // add the item to the alphabet
+                        //members.add(item);                // add the item to the alphabet
                         if (NFA.getTransitions(p).containsKey(item))  q = NFA.getTransitions(p).get(item);
                         else {
                             NFA.newState(q = NFA.newTransition(p,item), new State(false,item));
@@ -153,8 +156,7 @@ public class WASMA {
                         NFA.State(q).setWeight(1);
                         NFA.State(q).follow.or(sequenceBitset.get(currentItemset)); // assign prior and next items to the state
                         NFA.State(q).follow.clear(item); // exclude the item of the state from the bitmap
-                        if (StateStack.get(item) == null) StateStack.put(item, new Stack<>());
-                        StateStack.get(item).push(q);
+                        StateStack.push(q);
                         p = q;
                     }
                 }
