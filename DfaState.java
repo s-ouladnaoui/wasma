@@ -57,7 +57,7 @@ public class DfaState {
 
     public DfaState AlignLocal(int item,boolean compute) {
         DfaState res = new DfaState(item);
-        int i = 0; State r;
+        int i = 0; State r; BitSet t;
         for (State p:this.states){
             if (WASMA.itemsetDelimStates.get(p.getRoot()) != null && WASMA.itemsetDelimStates.get(p.getRoot()).containsKey(item) && WASMA.itemsetDelimStates.get(p.getRoot()).get(item) >= i)
                 i = WASMA.itemsetDelimStates.get(p.getRoot()).get(item);
@@ -65,8 +65,11 @@ public class DfaState {
                 r = WASMA.itemStates.get(item).get(i);
                 if (p.getStart() > r.getStart() && p.getEnd() <= r.getEnd()) i++;
                 else {
-                    if (r.getStart() > p.getStart() && this.getMotif().intersects(r.getFollow())) 
-                        res.addState(r,compute);
+                    if (r.getStart() > p.getStart()) {
+                        t = (BitSet) this.getMotif().clone();
+                        t.and(r.getFollow());
+                        if (t.equals(this.getMotif())) res.addState(r,compute);
+                    } 
                     i =  r.getlEnd();
                 }
             }

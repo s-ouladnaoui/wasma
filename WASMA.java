@@ -77,23 +77,24 @@ public class WASMA {
         StateStack.push(0);
         HashMap<Integer, Integer> alphabet = new HashMap<>();   /* The items of the dataset and the associated supports */
         HashSet<Integer> members = new HashSet<>();
-        int y, z, t, j, currentItemset, item;
-        HashMap<Integer,Integer> x;
+        int y, z, j, o, currentItemset, item;    // different working variables
+        BitSet bs;
+        HashMap<Integer,Integer> vSatate;    
         String transaction;
         String[] itemsets, items;
         long startTime = System.nanoTime();
         while ((transaction = in.readLine()) != null) { 
-            x = new HashMap<Integer,Integer>();
+            vSatate = new HashMap<Integer,Integer>();
             itemsets = transaction.substring(0,transaction.length()-6).split("-1");
             j = 0;
             ArrayList<BitSet> sequenceBitset = new ArrayList<BitSet>();
             for (String itemset:itemsets) {
                 sequenceBitset.add(new BitSet());
                 for(String i:itemset.trim().split(" ")) { 
-                    int o = Integer.parseInt(i);
+                    o = Integer.parseInt(i);
                     sequenceBitset.get(j).set(o); 
                     members.add(o);
-                    x.put(o, transactionDelimiter);
+                    vSatate.put(o, transactionDelimiter);
                 }
                 j++;
             }
@@ -108,11 +109,16 @@ public class WASMA {
                         y = StateStack.pop();               // the last stateDelimiter in the current sequence
                         while (--currentItemset >= 0) {
                             for (int i = sequenceBitset.get(currentItemset).length(); (i = sequenceBitset.get(currentItemset).previousSetBit(i-1)) >= 0;) {
-                                if (x.get(i) == transactionDelimiter) x.put(i,StateStack.pop());
+                                if (vSatate.get(i) == transactionDelimiter) 
+                                    vSatate.put(i,StateStack.pop());
                                 else {
                                     z = StateStack.pop();
-                                    NFA.State(z).setFollow(NFA.State(x.get(i)).getFollow()); // the next follow items  
-                                    x.put(i,z);
+                                    bs = new BitSet();
+                                    bs.clear(0,i+1);
+                                    bs.set(Math.min(i+1,NFA.State(vSatate.get(i)).getFollow().length()), NFA.State(vSatate.get(i)).getFollow().length());
+                                    bs.and(NFA.State(vSatate.get(i)).getFollow());
+                                    NFA.State(z).setFollow(bs); // the next follow items  
+                                    vSatate.put(i,z);
                                 }
                             }
                             z = StateStack.pop();               // the last stateDelimiter in the current sequence
