@@ -63,7 +63,7 @@ public class DfaState {
                 i = WASMA.itemsetDelimStates.get(p.getRoot()).get(item);
             while (i < WASMA.itemStates.get(item).size() &&  WASMA.itemStates.get(item).get(i).getEnd() <= p.getEnd()) {
                 r = WASMA.itemStates.get(item).get(i);
-                if (p.getStart() > r.getStart() && p.getEnd() <= r.getEnd()) i++;
+                if (p.getStart() > r.getStart() && p.getEnd() <= r.getEnd())  i++;
                 else {
                     if (r.getStart() > p.getStart()) {
                         t = (BitSet) this.getMotif().clone();

@@ -11,16 +11,17 @@ public class WASMA {
     static Automaton<DfaState> DFA;                                      // Deterministic equivalent of the above NFA by subset construction contains the frquent sequential patterns of the dataset
     static ArrayDeque<Integer> DFAqueue;                                 /* the set of states of the weighted dfa and the queue of the same objects used during Determinization */
     static int NFAStartState = 0, DFAStartState = 0;                     /* initial states of the wnfa/wdfa */
-    static HashMap<Integer,HashMap<BitSet,Integer>> DFAmap = new HashMap<>();
-    static BitSet fingerprint = new BitSet();
-    static HashMap<Integer,ArrayList<State>> itemStates = new HashMap<Integer,ArrayList<State>>();
+    static HashMap<Integer,ArrayList<State>> itemStates = new HashMap<Integer,ArrayList<State>>();   // Vectors of states per item in local order
     static HashMap<Integer,HashMap<Integer,Integer>> itemsetDelimStates = new HashMap<Integer,HashMap<Integer,Integer>>();
-    static HashMap<Integer,Integer> Order = new HashMap<>();
+    static HashMap<Integer,Integer> Order = new HashMap<>();  // local order for each item associated set of state 
+    static HashMap<Integer,HashMap<BitSet,Integer>> DFAmap = new HashMap<>();
     static BitSet fItems = new BitSet();                           /* the set F1 of frequent items as a bitset*/  
+    static BitSet fingerprint = new BitSet();               /* encode the set of states of a DFA state as bitset for existance check in subset constructiob algo */
+
     
     public WASMA (int ms) {
         NFA = new Automaton<State>();  
-        NFA.newState(NFAStartState, new State(true,-1)); 
+        NFA.newState(NFAStartState, new State(true,itemsetDelimiter)); 
         DFA = new Automaton<DfaState>(); 
         DFA.newState(DFAStartState, new DfaState(itemsetDelimiter));   
         DFAqueue = new ArrayDeque<Integer>();
@@ -114,7 +115,7 @@ public class WASMA {
                                 else {
                                     z = StateStack.pop();
                                     bs = new BitSet();
-                                    bs.clear(0,i+1);
+                                    //bs.clear(0,i+1);
                                     bs.set(Math.min(i+1,NFA.State(vSatate.get(i)).getFollow().length()), NFA.State(vSatate.get(i)).getFollow().length());
                                     bs.and(NFA.State(vSatate.get(i)).getFollow());
                                     NFA.State(z).setFollow(bs); // the next follow items  
@@ -148,8 +149,7 @@ public class WASMA {
                         }
                         NFA.State(q).setWeight(1);
                         StateStack.push(q);
-                        current_root = q;
-                        p = q;
+                        p = current_root = q;
                         currentItemset++;
                         break;
                     default :
