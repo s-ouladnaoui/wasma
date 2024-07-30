@@ -30,7 +30,7 @@ public class WASMA {
     /* Each state of the wNFA has a double integer code (start & end) used for descendence (reachability) check */
     public void encode (int s) {     
         State ss = NFA.State(s);
-        int item = ss.item;
+        int item = ss.getItem();
         if (item != itemsetDelimiter) ss.setDelim(itemStates.get(itemsetDelimiter) == null? 0: itemStates.get(itemsetDelimiter).size()); 
         if (item == itemsetDelimiter || fItems.get(item)) {
             ss.setStart(++gcode);

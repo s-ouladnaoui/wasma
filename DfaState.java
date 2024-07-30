@@ -15,7 +15,7 @@ public class DfaState {
         return states.get(0).getType();     // we check the first state (our DFA is homogeneous)
     }
 
-    public int getItem(){ return motif.previousSetBit(motif.length());}
+    public int getItem(){ return states.get(0).getItem();}
     
     public BitSet getMotif(){ return motif;}
 
