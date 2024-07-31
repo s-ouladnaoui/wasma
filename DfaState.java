@@ -8,7 +8,7 @@ public class DfaState {
         states = new ArrayList<State>();
         follow = new BitSet();
         motif  = new BitSet(); 
-        if (i >= 0) motif.set(i); else motif.clear();  // at each itemset separator we initialize the current motif (start a new itemset) 
+        if (i >= 0) motif.set(i); // at each itemset separator we initialize the current motif (start a new itemset) 
     }
 
     public boolean IsDelimiterState() {     // is this DFA state a delimiter state (# state)
