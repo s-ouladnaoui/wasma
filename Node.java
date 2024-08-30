@@ -1,8 +1,8 @@
 import java.util.BitSet;
 // one node of DFA used in determinisation with state existence check
 // Here the node records only the last itemset reached as  a BitSet
-
 public class Node extends DfaState <BitSet>{
+    
     public Node(int i) {
         Pattern  = new BitSet(); 
         if (i >= 0) Pattern.set(i); // at each itemset separator (start a new itemset) we initialize the current motif  

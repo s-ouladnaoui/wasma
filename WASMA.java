@@ -288,15 +288,16 @@ public class WASMA {
         int mins = Integer.parseInt(args[0]);      // min support
         if (mins < 1) {
             System.out.println("Absolute Min supp should be >= 1");
-            return;
+            mins = 1;
+            //return;
         }
         WASMA spm = new WASMA(mins);            // a new instance of the sequential pattern mining algo
         writer = new BufferedWriter(new FileWriter(args[2]));       // the output file
         PRINT_PATTERNS = Boolean.parseBoolean(args[3]);             // print the collection of the frequent patterns 
         STATE_EXISTENCE_CHECK = Boolean.parseBoolean(args[4]);      // subset construction using or not state existence check
-        spm.loadData(args[1]);  
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
+        spm.loadData(args[1]);  
         if (STATE_EXISTENCE_CHECK) {
             System.out.println("with state test");
             spm.Determinize_with_State_Existence_Check();

@@ -13,7 +13,6 @@ public abstract class DfaState <T>{
 
     public T getPattern() {return Pattern;}
 
-
     public boolean IsDelimiterState() {     // is this DFA state a delimiter state (# state)
         return (states.size() > 0)? states.get(0).getType():false; // we check the first state (our DFA is homogeneous)
     }
@@ -35,7 +34,6 @@ public abstract class DfaState <T>{
     public abstract DfaState <T> AlignLocal(int item); 
 
     public abstract DfaState <T> AlignGlobal(int item); 
-
 
     public void addState(State t, boolean computeSupport) {       // add state to the stateset and consider its follow and weight if it's the case                
         if (!t.getType() || !t.getFollow().isEmpty()) {      
