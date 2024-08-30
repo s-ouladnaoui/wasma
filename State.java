@@ -10,8 +10,6 @@ public class State {
         root;                                               /* the root of the subtree: the begining of the itemset that contains this state */
     BitSet follow;                                          /* the following items in the NFAutomaton */
         
-    public Object getFollow;
-    
     public State(boolean stateType, int i) {
         item = i;
         type = stateType;

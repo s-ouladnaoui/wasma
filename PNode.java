@@ -1,13 +1,10 @@
 import java.util.ArrayList;
 import java.util.BitSet;
 // one node of DFA used in determinisation without state existance check
-// Note that the node records the current sequential pattern
-public class PNode extends DfaState {
-    ArrayList<Integer> Pattern;
+// Note that the node records the current sequential pattern as an ArrayList of Integers (Items)
+public class PNode extends DfaState <ArrayList<Integer>> {
 
     public PNode() {Pattern = new ArrayList<Integer>();}
-
-    public ArrayList<Integer> getPattern() {return Pattern;}
     
     public PNode AlignLocal(int item) {
         PNode res = new PNode();
@@ -15,12 +12,12 @@ public class PNode extends DfaState {
         for (State p:this.getStates()){
             if (!p.getFollow().get(item)) continue;
             if (p.getRoot() == 0) i = 0;
-            else if (WASMA.itemsetDelimStates.get(p.getRoot()).get(item) >= i)
-                    i = WASMA.itemsetDelimStates.get(p.getRoot()).get(item);
+            else if (WASMA.itemsetDelimStates.get(p.getRoot()).map.get(item) >= i)
+                    i = WASMA.itemsetDelimStates.get(p.getRoot()).map.get(item);
             r = WASMA.itemStates.get(item).get(i);
             while (r.getStart() < p.getStart()) {
                 i = r.getlEnd() + 1;
-                if (i < WASMA.itemStates.get(item).size()) r = WASMA.itemStates.get(item).get(i); else break;
+                r = WASMA.itemStates.get(item).get(i);
             }
             while (r.getEnd() <= p.getEnd()) {
                 if (r.getRoot() == p.getRoot()) found = true;
@@ -43,11 +40,10 @@ public class PNode extends DfaState {
         PNode res = new PNode();
         int i = 0; State r;
         for (State p:this.getStates()) {
-            if (item >= 0 && !p.getFollow().get(item)) continue;
-            i = (p.getStart() == 0) ? 0 : (item == WASMA.itemsetDelimiter) ? 
-                            WASMA.itemStates.get(item).get(p.getDelim()).getOrder(): 
-                            WASMA.itemsetDelimStates.get(p.getStart()).get(item);
-            r = WASMA.itemStates.get(item).get(i);
+            if (!p.getFollow().get(item)) continue;
+            r = (p.getStart() == 0)? 
+                WASMA.itemStates.get(item).get(0):
+                WASMA.itemStates.get(item).get(WASMA.itemsetDelimStates.get(p.getOrder()).map.get(item));
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,true);
                 i = r.getlEnd() + 1;
@@ -59,25 +55,17 @@ public class PNode extends DfaState {
     }
     public PNode Terminate_Sequence() {     //Delta(this,#) terminate a sequence by # same as global alignment (separated to save some tests)
         WASMA.fingerprint = new BitSet();
-        PNode res = new PNode();
+        PNode res =  new PNode();
         int i; State r;
         for (State p:this.getStates()) {        
-            i = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getDelim()).getOrder();
-            r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
+            r = WASMA.itemsetDelimStates.get(p.getDelim()).state;
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,false);
                 i = r.getlEnd() + 1;
-                if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
+                if (i < WASMA.itemsetDelimStates.size()) r = WASMA.itemsetDelimStates.get(i).state;
                 else break;
             }  
         }
         return res;         
     }
-
-    public PNode Delta(int item) {          //res = this.Deltat(i)
-        WASMA.fingerprint = new BitSet();
-        return (this.IsDelimiterState())? 
-            AlignGlobal(item):       // global alignment   item(this) == #  
-            AlignLocal(item);    // local alignment (item != #) or  terminate the sequence item = # 
-    }  
 }
