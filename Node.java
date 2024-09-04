@@ -1,7 +1,7 @@
 import java.util.BitSet;
 // one node of DFA used in determinisation with state existence check
-// Here the node records only the last itemset reached as  a BitSet
-public class Node extends DfaState <BitSet>{
+// Here the node records only the last reached itemset  as  a BitSet
+public class Node extends DfaState <BitSet> {
     
     public Node(int i) {
         Pattern  = new BitSet(); 
@@ -59,7 +59,7 @@ public class Node extends DfaState <BitSet>{
         Node res =  new Node(WASMA.itemsetDelimiter);
         int i; State r;
         for (State p:this.getStates()) {        
-            r = WASMA.itemsetDelimStates.get(p.getDelim()).state;
+            r = WASMA.itemsetDelimStates.get(((iState)p).getDelim()).state;
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,false);
                 i = r.getlEnd() + 1;

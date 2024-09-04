@@ -58,7 +58,7 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         PNode res =  new PNode();
         int i; State r;
         for (State p:this.getStates()) {        
-            r = WASMA.itemsetDelimStates.get(p.getDelim()).state;
+            r = WASMA.itemsetDelimStates.get(((iState)p).getDelim()).state;
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,false);
                 i = r.getlEnd() + 1;

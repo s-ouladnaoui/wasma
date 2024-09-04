@@ -1,7 +1,7 @@
 import java.util.*;
 // one state of the wDFA is a set of states of the wNfa 
-public abstract class DfaState <T>{
-    T Pattern;   
+public abstract class DfaState <P> {
+    P Pattern;   
     ArrayList<State> states;        // the set of states composing one state of the DFA
     BitSet follow;                  // follow the set of newt items; motif the current itemset as a bitset for local extension check
     int support;                                                                                                                                                                                                                      
@@ -11,7 +11,7 @@ public abstract class DfaState <T>{
         follow = new BitSet();
     }
 
-    public T getPattern() {return Pattern;}
+    public P getPattern() {return Pattern;}
 
     public boolean IsDelimiterState() {     // is this DFA state a delimiter state (# state)
         return (states.size() > 0)? states.get(0).getType():false; // we check the first state (our DFA is homogeneous)
@@ -31,20 +31,20 @@ public abstract class DfaState <T>{
 
     public String toString() { return states.toString(); }
 
-    public abstract DfaState <T> AlignLocal(int item); 
+    public abstract DfaState <P> AlignLocal(int item); 
 
-    public abstract DfaState <T> AlignGlobal(int item); 
+    public abstract DfaState <P> AlignGlobal(int item); 
 
     public void addState(State t, boolean computeSupport) {       // add state to the stateset and consider its follow and weight if it's the case                
-        if (!t.getType() || !t.getFollow().isEmpty()) {      
+        if (!t.getType() || (t.getFollow()!= null && !t.getFollow().isEmpty())) {      
             states.add(t);
             this.setFollow(t.getFollow());
             if (WASMA.STATE_EXISTENCE_CHECK && t.getOrder() >= 0) WASMA.fingerprint.set(t.getOrder());
         }    
-        if (computeSupport) this.setSupport(t.getWeight());
+        if (computeSupport) this.setSupport(((iState)t).getWeight());
     }        
 
-    public DfaState <T> Delta(int item) {    //res = this.Deltat(i,compute)
+    public DfaState <P> Delta(int item) {    //res = this.Deltat(i,compute)
         WASMA.fingerprint = new BitSet();
         return (this.IsDelimiterState())? 
             AlignGlobal(item):               // global alignment   item(this) == #   
