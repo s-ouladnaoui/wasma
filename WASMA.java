@@ -18,17 +18,6 @@ public class WASMA {
     static HashMap<Integer,HashMap<BitSet,Integer>> DFAmap = new HashMap<>();
     static BitSet fItems = new BitSet();                    /* the set F1 of frequent items as a bitset*/  
     static BitSet fingerprint = new BitSet();               /* encode the set of states of a DFA state as bitset for state existance check in subset constructiob algo */ 
-    class DelimiterMap {
-        State state;
-        HashMap<Integer,Integer> map;
-        public DelimiterMap(State v) {
-            state = v;
-            map = new HashMap<Integer,Integer>();
-        }
-        public State getState() {return state;}
-        public HashMap<Integer,Integer> getMap(){return map;}
-    }
-    static ArrayList<DelimiterMap> itemsetDelimStates = new ArrayList<>();
     public WASMA(int ms) {
         NFA = new Automaton<State>();  
         NFA.newState(NFAStartState, new dState()); 
@@ -42,13 +31,13 @@ public class WASMA {
     public void encode (int s) {     
         State ss = NFA.State(s);
         int item = ss.getItem();
-        if (item != itemsetDelimiter) ((iState)ss).setDelim(itemsetDelimStates.size()); 
+        if (item != itemsetDelimiter) ((iState)ss).setDelim((itemStates.get(itemsetDelimiter) == null)?0:itemStates.get(itemsetDelimiter).size()); 
         if (item == itemsetDelimiter || fItems.get(item)) {
             ss.setStart(++gcode);
             if (itemStates.containsKey(item)) {
                 itemStates.get(item).add(ss);
             }
-            else if (item != itemsetDelimiter) {
+            else {
                 ArrayList<State> r = new ArrayList<State>();
                 r.add(ss);
                 itemStates.put(item, r);
@@ -62,14 +51,10 @@ public class WASMA {
                 Order.put(item, lcode);
             }
             ss.setOrder(lcode);
-            if (item == itemsetDelimiter)  {
-                DelimiterMap v = new DelimiterMap(ss);
-                itemsetDelimStates.add(v);
-            }
             ss.setRoot(NFA.State(ss.getRoot()).getOrder());
-            if (s != 0 && item != itemsetDelimiter && !itemsetDelimStates.get(ss.getRoot()).map.containsKey(item)) {
-                itemsetDelimStates.get(ss.getRoot()).map.put(item,ss.getOrder());
-                itemsetDelimStates.get(ss.getRoot()).state.follow.set(item);
+            if (item != itemsetDelimiter && !((dState)itemStates.get(itemsetDelimiter).get(ss.getRoot())).map.containsKey(item)) {
+                ((dState)itemStates.get(itemsetDelimiter).get(ss.getRoot())).map.put(item,ss.getOrder());
+                itemStates.get(itemsetDelimiter).get(ss.getRoot()).follow.set(item);
             }
         }
         for (int q : NFA.getTransitions(s).values())  encode(q);
@@ -78,15 +63,16 @@ public class WASMA {
             ss.setlEnd(Order.get((ss.getType()?-1:ss.getItem())));
             if (item == itemsetDelimiter) 
                 if (!NFA.getTransitions(s).isEmpty()) {
-                    for (int i:itemsetDelimStates.get(ss.getOrder()).map.keySet()) {
-                        if (!itemsetDelimStates.get(ss.getRoot()).map.containsKey(i)) {
-                            itemsetDelimStates.get(ss.getRoot()).map.put(i,itemsetDelimStates.get(ss.getOrder()).map.get(i));
-                            itemsetDelimStates.get(ss.getRoot()).state.follow.set(i);
+                    
+                    for (int i:((dState)itemStates.get(itemsetDelimiter).get(ss.getOrder())).map.keySet()) {
+                        if (!((dState)itemStates.get(itemsetDelimiter).get(ss.getRoot())).map.containsKey(i)) {
+                            ((dState)itemStates.get(itemsetDelimiter).get(ss.getRoot())).map.put(i,((dState)itemStates.get(itemsetDelimiter).get(ss.getOrder())).map.get(i));
+                            ((dState)itemStates.get(itemsetDelimiter).get(ss.getRoot())).follow.set(i);
                         }
                     }
                 } else {
-                        itemsetDelimStates.get(ss.getOrder()).map = null;
-                        itemsetDelimStates.get(ss.getOrder()).state.follow = null;
+                    ((dState)itemStates.get(itemsetDelimiter).get(ss.getOrder())).map = null;
+                    ((dState)itemStates.get(itemsetDelimiter).get(ss.getOrder())).follow = null;
                 }
             }
     }
@@ -199,7 +185,6 @@ public class WASMA {
 /* ==================== Preparation of the Determinization: creation of the first state of the DFA =============================================================*/       
             // Set the global/local start and end codes for the NFA states they will be used in DELTA Computation (reachability checking)
             encode(NFAStartState);
-            itemsetDelimStates.get(0).map = null;
             NFA.State(DFAStartState).setRoot(DFAStartState);
             if (STATE_EXISTENCE_CHECK) {
                 DFAqueue.add(DFAStartState);
@@ -300,10 +285,10 @@ public class WASMA {
             writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\n"+
                 "DFA States: "+DFA.NbStates);
             System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\n"+
-                "DFA States: "+DFA.NbStates);                
+                "DFA States: "+DFA.NbStates );                
             DFA.Print(DFAStartState,writer,PRINT_PATTERNS);
             writer.write("\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
-            System.out.println("Nb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
+            System.out.println("Nb Frequent Sequences: "+nbFreqSequences+"\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
         } else {
             System.out.println("Sans state test");
             spm.Determinize_without_State_Existence_Check();
@@ -311,9 +296,9 @@ public class WASMA {
             long afterUsedMem =  Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
             String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
             writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")"
-            +"\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
+            + "\nNb Frequent Sequences: " + nbFreqSequences +"\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
             System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")"
-            +"\nNb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
+            + "\nNb Frequent Sequences: " + nbFreqSequences +"\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
         }
         writer.close();
     }

@@ -12,8 +12,8 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         for (State p:this.getStates()){
             if (!p.getFollow().get(item)) continue;
             if (p.getRoot() == 0) i = 0;
-            else if (WASMA.itemsetDelimStates.get(p.getRoot()).map.get(item) >= i)
-                    i = WASMA.itemsetDelimStates.get(p.getRoot()).map.get(item);
+            else if (((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= i)
+                    i = ((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
             r = WASMA.itemStates.get(item).get(i);
             while (r.getStart() < p.getStart()) {
                 i = r.getlEnd() + 1;
@@ -43,7 +43,7 @@ public class PNode extends DfaState <ArrayList<Integer>> {
             if (!p.getFollow().get(item)) continue;
             r = (p.getStart() == 0)? 
                 WASMA.itemStates.get(item).get(0):
-                WASMA.itemStates.get(item).get(WASMA.itemsetDelimStates.get(p.getOrder()).map.get(item));
+                WASMA.itemStates.get(item).get(((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getOrder())).map.get(item));
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,true);
                 i = r.getlEnd() + 1;
@@ -58,11 +58,11 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         PNode res =  new PNode();
         int i; State r;
         for (State p:this.getStates()) {        
-            r = WASMA.itemsetDelimStates.get(((iState)p).getDelim()).state;
+            r = (WASMA.itemStates.get(WASMA.itemsetDelimiter).get((((iState)p).getDelim())));
             while (r.getEnd() <= p.getEnd()) {
                 res.addState(r,false);
                 i = r.getlEnd() + 1;
-                if (i < WASMA.itemsetDelimStates.size()) r = WASMA.itemsetDelimStates.get(i).state;
+                if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
                 else break;
             }  
         }
