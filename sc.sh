@@ -1,5 +1,5 @@
 #! /bin/bash
-limit=1800s
+limit=900s
 for ds in {"kosarak25k.txt","BMS1_spmf.txt","LEVIATHAN.txt","SIGN.txt","FIFA.txt","BIBLE.txt","r10k_100"} 
 do
 size=$(wc -l < $ds)
@@ -21,6 +21,10 @@ echo  "			$prg"
 				timeout $limit java  $prg $ms_abs $ds r  false true > res1
 				if [[ $? -eq 124 ]]
 				then 
+					echo "			timeout"
+					break
+				elif [[ $? -eq 137 || $? -eq 1 ]]
+					echo "			out of memory"
 					break
 				fi
 				echo -ne "			$(cat res1 | awk '/time/ {print $3}')"
@@ -32,10 +36,12 @@ echo  "			$prg"
 				timeout $limit java  $prg $ms_abs $ds r  false false > res2
 				if [[ $? -eq 124 ]]
 				then 
+					echo "			timeout"
+					break
+				elif [[ $? -eq 137 || $? -eq 1 ]]
+					echo "			out of memory"
 					break
 				fi
-				#/usr/bin/time -f 'Elapsed time: %es\nMemory usage: %M KB\nCPU usage: %P' timeout 300s  java  $prg $ms_abs $ds r  false false
-				echo -ne "			$(cat res2 | awk '/time/ {print $3}')"
 				echo "		$(cat res2 | awk  '/mory/ {print $3}')"
 				done
 			else
@@ -45,6 +51,10 @@ echo  "			$prg"
 				timeout $limit java -jar spmf.jar run $prg $ds r  $ms_rel > res3
 				if [[ $? -eq 124 ]]
 				then 
+					echo "			timeout"
+					break
+				elif [[ $? -eq 137 || $? -eq 1 ]]
+					echo "			out of memory"
 					break
 				fi
 				echo -ne "			$(cat res3 | awk '/time/ {print $4}')	"

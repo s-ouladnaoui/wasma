@@ -1,53 +1,38 @@
 import java.util.*;
-// one state of the wDFA is a set of states of the wNfa 
-public abstract class DfaState <P> {
-    P Pattern;   
-    ArrayList<State> states;        // the set of states composing one state of the DFA
-    BitSet follow;                  // follow the set of newt items; motif the current itemset as a bitset for local extension check
+// one state of the wDFA  add the support and a parametrized Pattern (for the 2 versions of the subset construction: with or without stat existence test)
+public abstract class DfaState <P> extends DState {
+    
+    P Pattern;     
     int support;                                                                                                                                                                                                                      
+    HashSet<Integer> follow;
     
-    public DfaState() {      
-        states = new ArrayList<State>();
-        follow = new BitSet();
+    public boolean IsDelimiterState() {
+        return states.get(0).IsDelimiterState(); 
     }
-
-    public P getPattern() {return Pattern;}
-
-    public boolean IsDelimiterState() {     // is this DFA state a delimiter state (# state)
-        return (states.size() > 0)? states.get(0).getType():false; // we check the first state (our DFA is homogeneous)
-    }
-
-    public int getItem() { return states.get(0).getItem();}
-    
-    public ArrayList<State> getStates() { return states;}
 
     public int getSupport() { return support;}
 
     public void setSupport(int sprt) { support += sprt;}
+    
+    public P getPattern() {return Pattern;}
 
-    public BitSet getFollow() { return follow;}
+    public Set<Integer> getFollow() {return follow;}
 
-    public void setFollow(BitSet b) { follow.or(b);}
+    public void setFollow(Set<Integer> s) { follow.addAll(s);}
 
-    public String toString() { return states.toString(); }
+    public int getItem() { return states.get(0).getItem();}
+    
+    public String toString() { return states.toString(); }    
+    
+    public abstract <T> HashMap<Integer,T> extendGlobal();
+    
+    public abstract <T> HashMap<Integer,T> extendLocal(); 
 
-    public abstract DfaState <P> AlignLocal(int item); 
+    public abstract <T> T terminateSequence();
 
-    public abstract DfaState <P> AlignGlobal(int item); 
-
-    public void addState(State t, boolean computeSupport) {       // add state to the stateset and consider its follow and weight if it's the case                
-        if (!t.getType() || (t.getFollow()!= null && !t.getFollow().isEmpty())) {      
-            states.add(t);
-            this.setFollow(t.getFollow());
-            if (WASMA.STATE_EXISTENCE_CHECK && t.getOrder() >= 0) WASMA.fingerprint.set(t.getOrder());
-        }    
-        if (computeSupport) this.setSupport(((iState)t).getWeight());
-    }        
-
-    public DfaState <P> Delta(int item) {    //res = this.Deltat(i,compute)
-        WASMA.fingerprint = new BitSet();
-        return (this.IsDelimiterState())? 
-            AlignGlobal(item):               // global alignment   item(this) == #   
-            AlignLocal(item);               // local alignment (item != #)  
-    }  
+    public <T> HashMap<Integer,T> Delta() {
+        return (this.IsDelimiterState())?
+           extendGlobal(): 
+           extendLocal();
+    }      
 }

@@ -1,66 +1,93 @@
 import java.util.ArrayList;
-import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+//import java.util.HashSet;
 // one node of DFA used in determinisation without state existance check
 // Note that the node records the current sequential pattern as an ArrayList of Integers (Items)
 public class PNode extends DfaState <ArrayList<Integer>> {
-
-    public PNode() {Pattern = new ArrayList<Integer>();}
     
-    public PNode AlignLocal(int item) {
-        PNode res = new PNode();
-        int i = 0, m; State r; boolean found;
-        for (State p:this.getStates()){
-            if (!p.getFollow().get(item)) continue;
-            if (p.getRoot() == 0) i = 0;
-            else if (((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= i)
-                    i = ((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
-            r = WASMA.itemStates.get(item).get(i);
-            while (r.getStart() < p.getStart()) {
-                i = r.getlEnd() + 1;
-                r = WASMA.itemStates.get(item).get(i);
-            }
-            while (r.getEnd() <= p.getEnd()) {
-                if (r.getRoot() == p.getRoot()) found = true;
-                else {
-                    found = true;
-                    for(m = this.getPattern().size() - 1;found && m >= 0 && this.getPattern().get(m) >= 0;found = r.getFollow().get(this.getPattern().get(m--)));
-                }
-                if (found) {
-                    res.addState(r, true);
-                    i = r.getlEnd() + 1;
-                } else i++;
-                if (i < WASMA.itemStates.get(item).size())  r = WASMA.itemStates.get(item).get(i);
-                else break;
-            }
-        }
-        return res;
+
+    public PNode() { 
+        Pattern = new ArrayList<Integer>();
+        follow = new HashSet<>();
     }
 
-    public PNode AlignGlobal(int item) { 
-        PNode res = new PNode();
-        int i = 0; State r;
+    @SuppressWarnings("unchecked")
+    public <T> HashMap<Integer,T> extendGlobal() {
+        HashMap<Integer,T> resultat = new HashMap<>();
+        int i; itemState r;
+        HashMap<Integer,Integer> index = new HashMap<>();
         for (State p:this.getStates()) {
-            if (!p.getFollow().get(item)) continue;
-            r = (p.getStart() == 0)? 
-                WASMA.itemStates.get(item).get(0):
-                WASMA.itemStates.get(item).get(((dState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getOrder())).map.get(item));
-            while (r.getEnd() <= p.getEnd()) {
-                res.addState(r,true);
-                i = r.getlEnd() + 1;
-                if (i < WASMA.itemStates.get(item).size()) r = WASMA.itemStates.get(item).get(i);
-                else break;
-            }  
+            for(int item:p.getFollow()) {
+                i = 0;
+                T res =  (T) new PNode();
+                if (resultat.get(item) == null) resultat.put(item, res);
+                else res = resultat.get(item);
+                if (!index.containsKey(item)) index.put(item, 0);
+                r = (itemState) WASMA.itemStates.get(item).get(((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getOrder())).map.get(item));
+                while (r.getEnd() <= p.getEnd()) {
+                    ((PNode)res).states.add(r);
+                    ((PNode)res).setSupport(((itemState) r).getWeight());
+                    ((PNode)res).setFollow(((itemState) r).getFollow());
+                    i = r.getlEnd() + 1;
+                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    else break;
+                }
+            }
         }
-        return res;         
+        return resultat;    
     }
-    public PNode Terminate_Sequence() {     //Delta(this,#) terminate a sequence by # same as global alignment (separated to save some tests)
-        WASMA.fingerprint = new BitSet();
-        PNode res =  new PNode();
+
+    @SuppressWarnings("unchecked")
+    public <T> HashMap<Integer,T> extendLocal() {
+        HashMap<Integer,T> resultat = new HashMap<>();
+        int i, m; itemState r; boolean found;
+        HashMap<Integer,Integer> index = new HashMap<>();
+        for (State p:this.getStates()) {
+            for(int item:p.getFollow()) {
+                i = 0;
+                T res =  (T) new PNode();
+                if (resultat.get(item) == null) resultat.put(item, res);
+                else res = resultat.get(item);
+                if (!index.containsKey(item)) index.put(item, 0);
+                if (((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= index.get(item))
+                    i = ((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
+                r = (itemState) WASMA.itemStates.get(item).get(i);
+                while (r.getStart() < p.getStart()) {
+                    i = r.getlEnd() + 1;
+                    r = (itemState) WASMA.itemStates.get(item).get(i);
+                }
+                while (r.getEnd() <= p.getEnd()) {
+                    if (r.getRoot() == p.getRoot()) found = true;
+                    else {
+                        found = true;
+                        for(m = this.getPattern().size() - 1;found && m >= 0 && this.getPattern().get(m) >= 0;found =((itemState) r).getPrevious().contains(this.getPattern().get(m--)));
+                    } 
+                    if (found) {
+                        ((PNode) res).states.add(r);
+                        ((PNode)res).setSupport(((itemState) r).getWeight());
+                        ((PNode)res).setFollow(((itemState) r).getFollow());
+                        i = r.getlEnd() + 1;
+                    } else  i++;
+                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i); else break;
+                } 
+                resultat.put(item, (T)res);
+            }
+        }
+        return resultat;        
+    }
+
+    @SuppressWarnings("unchecked")
+    public  <T> T terminateSequence(){        //Delta(this,#) terminate a sequence by # same as global alignment (separated to save some tests)
+        T res = (T) new PNode();
         int i; State r;
-        for (State p:this.getStates()) {        
-            r = (WASMA.itemStates.get(WASMA.itemsetDelimiter).get((((iState)p).getDelim())));
-            while (r.getEnd() <= p.getEnd()) {
-                res.addState(r,false);
+        for(State s:this.getStates()) {
+            r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(((itemState)s).getDelim());
+            while (r.getEnd() <= s.getEnd()) {
+                if (!r.getFollow().isEmpty()) {
+                    ((PNode)res).states.add(r);
+                    ((PNode)res).setFollow(((delimState) r).getFollow());
+                }
                 i = r.getlEnd() + 1;
                 if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
                 else break;

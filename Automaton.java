@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class Automaton<T> {
     public int NbStates;
     private ArrayList<HashMap<Integer,Integer>> adjList;    /* the set of states of the weighted nfa */
-    private HashMap<Integer,T> StateMap = new HashMap<>();  /* Map to hash the Object to its id */
+    private HashMap<Integer,T> stateMap = new HashMap<>();  /* Map to hash the Object to its id */
 
     public Automaton() {
         adjList = new ArrayList<>();
@@ -13,7 +13,7 @@ public class Automaton<T> {
         NbStates = 0;
     }
 
-    public T State(int i) { return StateMap.get(i);}
+    public T State(int i) { return stateMap.get(i);}
 
     public HashMap<Integer,Integer> getTransitions(int state) {
         return adjList.get(state);
@@ -21,7 +21,7 @@ public class Automaton<T> {
     
     public int newTransition(int state, int item) {      // new transition from state by item to a new state
         adjList.add(new HashMap<>());
-        StateMap.put(++NbStates, null);
+        stateMap.put(++NbStates, null);
         adjList.get(state).put(item,NbStates);
         return NbStates;
     }
@@ -31,7 +31,7 @@ public class Automaton<T> {
     }
 
     public void newState(int i, T state) {        // new state in the Map of stateIds
-        StateMap.put(i, state);
+        stateMap.put(i, state);
     }
 
     public String toString() {
@@ -44,7 +44,7 @@ public class Automaton<T> {
             if (e == WASMA.itemsetDelimiter && node != WASMA.DFAStartState) {
                 WASMA.nbFreqSequences++;  // a new frequent pattern
                 if (write) 
-                outputFile.write(WASMA.stk.toString()+" : "+((DfaState)StateMap.get(adjList.get(node).get(e))).getSupport()+"\n");
+                outputFile.write(WASMA.stk.toString()+" : "+((Node) stateMap.get(node)).getSupport()+"\n");
             }
             Print(WASMA.DFA.adjList.get(node).get(e),outputFile,write);
             WASMA.stk.pop();
