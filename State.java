@@ -1,14 +1,9 @@
 /* Weighted NFA State base Class */
 
-import java.util.Set;
-
 public abstract class State {
     int gstart, gend, lstart, lend, root;       /* codes for reachability (descendence) queries. g: for global coding ; l: for local coding */
                                                 // lstart is the order in the set of states associated with the item used in compact bitset representation of the DFA state
-                                                /* the root of the subtree: the begining of the itemset that contains this state */
-   
-    public abstract Set<Integer> getFollow();
-                                                
+                                                /* the root of the subtree: the begining of the itemset that contains this state */                                      
     public abstract int getItem();
 
     public abstract boolean getType();
@@ -32,8 +27,6 @@ public abstract class State {
     public int getRoot() { return root;}
 
     public void setRoot(int r) { root = r;}
-
-    public boolean IsDelimiterState() { return getType();}
 
     public String toString() { return ((Integer) gstart).toString();}    
 }

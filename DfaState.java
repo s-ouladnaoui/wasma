@@ -4,21 +4,14 @@ public abstract class DfaState <P> extends DState {
     
     P Pattern;     
     int support;                                                                                                                                                                                                                      
-    HashSet<Integer> follow;
     
-    public boolean IsDelimiterState() {
-        return states.get(0).IsDelimiterState(); 
-    }
+    public boolean IsDelimiterState() { return states.get(0).getType(); }
 
     public int getSupport() { return support;}
 
     public void setSupport(int sprt) { support += sprt;}
     
     public P getPattern() {return Pattern;}
-
-    public Set<Integer> getFollow() {return follow;}
-
-    public void setFollow(Set<Integer> s) { follow.addAll(s);}
 
     public int getItem() { return states.get(0).getItem();}
     
@@ -31,8 +24,6 @@ public abstract class DfaState <P> extends DState {
     public abstract <T> T terminateSequence();
 
     public <T> HashMap<Integer,T> Delta() {
-        return (this.IsDelimiterState())?
-           extendGlobal(): 
-           extendLocal();
-    }      
+        return (this.IsDelimiterState())?extendGlobal():extendLocal();
+    }
 }

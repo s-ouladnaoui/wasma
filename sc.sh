@@ -23,8 +23,9 @@ echo  "			$prg"
 				then 
 					echo "			timeout"
 					break
-				elif [[ $? -eq 137 || $? -eq 1 ]]
-					echo "			out of memory"
+				elif [[ $? -eq 137 ]]
+				then
+					echo " 			out of memory"
 					break
 				fi
 				echo -ne "			$(cat res1 | awk '/time/ {print $3}')"
@@ -38,10 +39,12 @@ echo  "			$prg"
 				then 
 					echo "			timeout"
 					break
-				elif [[ $? -eq 137 || $? -eq 1 ]]
+				elif [[ $? -eq 137 ]]
+				then
 					echo "			out of memory"
 					break
 				fi
+				echo -ne "			$(cat res2 | awk '/time/ {print $3}')"
 				echo "		$(cat res2 | awk  '/mory/ {print $3}')"
 				done
 			else
@@ -53,7 +56,8 @@ echo  "			$prg"
 				then 
 					echo "			timeout"
 					break
-				elif [[ $? -eq 137 || $? -eq 1 ]]
+				elif [[ $? -eq 137 ]]
+				then
 					echo "			out of memory"
 					break
 				fi

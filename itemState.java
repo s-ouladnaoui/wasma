@@ -1,25 +1,22 @@
 /* Weighted NFA item State Class */
 
-import java.util.HashSet;
-import java.util.Set;
-//import java.util.TreeSet;
+import java.util.BitSet;
 
 public class itemState extends State {
-    int item ;          /* The item of State */
-    int weight;         /* the frequency of the prefix from the startstate to this state */ 
-    int delimiter;       /* next Delimiter State */
-     Set<Integer> previous, follow;              /* the following items in the NFAutomaton */
+    int item ;                  /* The item of State */
+    int weight;                 /* the frequency of the prefix from the startstate to this state */ 
+    int delimiter;              /* next Delimiter State */
+    BitSet follow;              /* the following items in the NFAutomaton */
 
     public itemState(int i) { 
         item = i; 
-        previous = new HashSet<Integer>();
-        follow = new HashSet<Integer>();
+        follow = new BitSet();
         
     }
     
     public int getItem() { return item;}
     
-    public boolean getType() { return false;}       /* flag: the state is an itemset delimiter when is true*/
+    public boolean getType() { return false;}       /* flag: the state is an itemset delimiter when is true otherwise is an itemstate*/
     
     public int getDelim() { return delimiter;}
 
@@ -28,12 +25,9 @@ public class itemState extends State {
     public int getWeight() { return weight;}
 
     public void setWeight(int w) { weight += w;}
+    
+    public BitSet getFollow() { return follow;}
+    
+    public void setFollow(BitSet b) { follow.or(b);}
 
-    public Set<Integer> getFollow() { return follow;}
-
-    public void setFollow(int b) { follow.add(b);}
-
-    public Set<Integer> getPrevious() { return previous;}
-
-    public void setPrevious(int b) { previous.add(b);}
 }
