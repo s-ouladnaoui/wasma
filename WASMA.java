@@ -122,13 +122,11 @@ public class WASMA {
                                     k = (itemState) NFA.State(m);
                                     vState.put(i,m);
                                     k.setFollow(sequenceItemList.get(currentItemset));
-                                    k.getFollow().clear(k.getItem());
                                 }
                                 else {
                                     z = StateStack.pop();
                                     k = (itemState) NFA.State(z);
                                     k.setFollow(sequenceItemList.get(currentItemset));
-                                    k.getFollow().clear(k.getItem());
                                     BitSet bs = new BitSet();
                                     bs.set(Math.min(i+1,((itemState) NFA.State(vState.get(i))).getFollow().length()), ((itemState) NFA.State(vState.get(i))).getFollow().length());
                                     bs.and(((itemState) NFA.State(vState.get(i))).getFollow());
@@ -208,7 +206,7 @@ public class WASMA {
                 initial_pnode.states.add(NFA.State(NFAStartState)); 
                 Queue.add(initial_pnode);
             }
-            System.out.println("NB AC: "+NbAnti_chains());
+            //System.out.println("NB AC: "+NbAnti_chains());
            // long endTime = System.nanoTime();
            // writer.write("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions + "\n");     
             //writer.write("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates+"\n");
@@ -254,7 +252,7 @@ public class WASMA {
             source_state = DFA.State(s);         
             if (source_state.getStates().isEmpty()) continue;     
 /*================================================  resultat = delta(s) and  res = delta(s,i)  ================================================================*/           
-            resultat = source_state.Delta();
+            resultat = source_state.Delta(); // resultat takes all the delta(source_state,i) where i frequent and in foloow of source_state
             ref = source_state.getRef();
             for (int i:resultat.keySet()) {
                 res = resultat.get(i);

@@ -18,6 +18,7 @@ public class Node extends DfaState <BitSet> {
     public void setRef(int r) { ref = r;}
 
     @SuppressWarnings("unchecked")
+
     public <T> HashMap<Integer,T> extendGlobal() {
         HashMap<Integer,T> resultat = new HashMap<>();
         int i; itemState r;
@@ -46,8 +47,8 @@ public class Node extends DfaState <BitSet> {
         int i, m; itemState r; boolean found;
         HashMap<Integer,Integer> index = new HashMap<>();
         for (State p:this.getStates()) {
-            for(int item:WASMA.DFA.getTransitions(this.getRef()).keySet()) {
-                if (item <= p.getItem() || !((itemState)p).getFollow().get(item)) continue; /* extend the state by i iff the root contains a transition by i */
+            for(int item = ((itemState)p).getFollow().previousSetBit(((itemState)p).getFollow().length());item > p.getItem() ; item =((itemState)p).getFollow().previousSetBit(item-1) ) {
+                if (!WASMA.DFA.getTransitions(this.getRef()).keySet().contains(item) ) continue; /* extend the state by i iff the root contains a transition by i */
                 i = 0;
                 T res =  (T) new Node(item);
                 if (resultat.get(item) == null) resultat.put(item, res);
@@ -85,7 +86,7 @@ public class Node extends DfaState <BitSet> {
         for(State s:this.getStates()) {
             r = (delimState) WASMA.itemStates.get(WASMA.itemsetDelimiter).get(((itemState)s).getDelim());
             while (r.getEnd() <= s.getEnd()) {
-                if (!r.getFollow().isEmpty())  ((Node)res).states.add(r);
+                if (!r.getFollow().isEmpty())    ((Node)res).states.add(r);
                 i = r.getlEnd() + 1;
                 if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = (delimState) WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
                 else break;

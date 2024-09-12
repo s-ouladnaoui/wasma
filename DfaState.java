@@ -24,6 +24,6 @@ public abstract class DfaState <P> extends DState {
     public abstract <T> T terminateSequence();
 
     public <T> HashMap<Integer,T> Delta() {
-        return (this.IsDelimiterState())?extendGlobal():extendLocal();
+        return (this.IsDelimiterState()) ? extendGlobal() : extendLocal();
     }
 }

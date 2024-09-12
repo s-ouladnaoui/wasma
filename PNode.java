@@ -37,8 +37,7 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         int i, m; itemState r; boolean found;
         HashMap<Integer,Integer> index = new HashMap<>();
         for (State p:this.getStates()) {
-            for(int item = ((itemState)p).getFollow().nextSetBit(0);item >= 0; item =((itemState)p).getFollow().nextSetBit(item+1) ) {
-                if (item < p.getItem() || !((itemState)p).getFollow().get(item)) continue; /* extend the state by i iff the root contains a transition by i */
+            for(int item = ((itemState)p).getFollow().previousSetBit(((itemState)p).getFollow().length());item > p.getItem() ; item =((itemState)p).getFollow().previousSetBit(item-1) ) {
                 i = 0;
                 T res =  (T) new PNode();
                 if (resultat.get(item) == null) resultat.put(item, res);
