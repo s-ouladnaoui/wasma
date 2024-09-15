@@ -1,6 +1,5 @@
 import java.util.BitSet;
 import java.util.HashMap;
-//import java.util.HashSet;
 // one node of DFA used in determinisation with state existence check
 // Here the node records (Current Pattern ) only the last reached itemset as a BitSet
 public class Node extends DfaState <BitSet> {

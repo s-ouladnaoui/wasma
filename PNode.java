@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.HashSet;
 // one node of DFA used in determinisation without state existance check
 // Note that the node records the current sequential pattern as an ArrayList of Integers (Items)
 public class PNode extends DfaState <ArrayList<Integer>> {

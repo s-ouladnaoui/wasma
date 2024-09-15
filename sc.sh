@@ -1,6 +1,6 @@
 #! /bin/bash
 limit=900s
-for ds in {"kosarak25k.txt","BMS1_spmf.txt","LEVIATHAN.txt","SIGN.txt","FIFA.txt","BIBLE.txt","r10k_100"} 
+for ds in {"kosarak25k.txt","BMS1_spmf.txt","BIBLE.txt"} 
 do
 size=$(wc -l < $ds)
 echo  "	$ds"
@@ -16,7 +16,7 @@ echo  "			$prg"
 			if [ $prg =	 "WASMA" ] 
 			then
 				#/usr/bin/time -f 'Elapsed time: %es\nMemory usage: %M KB\nCPU usage: %P' timeout 300s java  $prg $ms_abs $ds r  false true
-				for i in {1..10} 
+				for i in {1..20} 
 				do
 				timeout $limit java  $prg $ms_abs $ds r  false true > res1
 				if [[ $? -eq 124 ]]
@@ -32,7 +32,7 @@ echo  "			$prg"
 				echo "		$(cat res1 | awk  '/mory/ {print $3}')"
 				done
 				echo "			==================="
-				for i in {1..10}
+				for i in {1..20}
 				do
 				timeout $limit java  $prg $ms_abs $ds r  false false > res2
 				if [[ $? -eq 124 ]]
@@ -49,7 +49,7 @@ echo  "			$prg"
 				done
 			else
 				#/usr/bin/time -f 'Elapsed time: %es\nMemory usage: %M KB\nCPU usage: %P' timeout 300s  java -jar spmf.jar run $prg $ds r  $ms_rel
-				for i in {1..10}
+				for i in {1..20}
 				do
 				timeout $limit java -jar spmf.jar run $prg $ds r  $ms_rel > res3
 				if [[ $? -eq 124 ]]
