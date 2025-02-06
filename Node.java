@@ -58,7 +58,7 @@ public class Node extends DfaState <BitSet> {
                 r = (itemState) WASMA.itemStates.get(item).get(i);
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < WASMA.itemStates.get(item).size())  r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;

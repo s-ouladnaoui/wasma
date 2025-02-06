@@ -42,12 +42,13 @@ public class PNode extends DfaState <ArrayList<Integer>> {
                 if (resultat.get(item) == null) resultat.put(item, res);
                 else res = resultat.get(item);
                 if (!index.containsKey(item)) index.put(item, 0);
+                if (!(WASMA.itemStates.get(WASMA.itemsetDelimiter).contains(p.getRoot()))) System.out.println(p.getRoot()+" not in the hash!");
                 if (((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= index.get(item))
                     i = ((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
                 r = (itemState) WASMA.itemStates.get(item).get(i);
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;
