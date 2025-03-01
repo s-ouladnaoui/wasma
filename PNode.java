@@ -37,18 +37,18 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         HashMap<Integer,Integer> index = new HashMap<>();
         for (State p:this.getStates()) {
             for(int item = ((itemState)p).getFollow().previousSetBit(((itemState)p).getFollow().length());item > p.getItem() ; item =((itemState)p).getFollow().previousSetBit(item-1) ) {
+                if (!((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.containsKey(item)) continue;
                 i = 0;
                 T res =  (T) new PNode();
                 if (resultat.get(item) == null) resultat.put(item, res);
                 else res = resultat.get(item);
                 if (!index.containsKey(item)) index.put(item, 0);
-                if (!(WASMA.itemStates.get(WASMA.itemsetDelimiter).contains(p.getRoot()))) System.out.println(p.getRoot()+" not in the hash!");
                 if (((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= index.get(item))
                     i = ((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
                 r = (itemState) WASMA.itemStates.get(item).get(i);
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;

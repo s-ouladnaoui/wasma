@@ -49,7 +49,7 @@ public class Node extends DfaState <BitSet> {
             for(int item = ((itemState)p).getFollow().previousSetBit(((itemState)p).getFollow().length());item > p.getItem() ; item =((itemState)p).getFollow().previousSetBit(item-1) ) {
                 if (!WASMA.DFA.getTransitions(this.getRef()).keySet().contains(item) ) continue; /* extend the state by i iff the root contains a transition by i */
                 i = 0;
-                T res =  (T) new Node(item);
+                T res = (T) new Node(item);
                 if (resultat.get(item) == null) resultat.put(item, res);
                 else res = resultat.get(item);
                 if (!index.containsKey(item)) index.put(item, 0);
@@ -58,7 +58,7 @@ public class Node extends DfaState <BitSet> {
                 r = (itemState) WASMA.itemStates.get(item).get(i);
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size())  r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;

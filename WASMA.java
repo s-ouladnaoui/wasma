@@ -28,8 +28,35 @@ public class WASMA {
         min_supp = ms;
         Queue = new Stack<PNode>();
     }
-    /* Each state of the wNFA has a double integer code (start & end) used for descendence (reachability) check */
-    public void encode (int s) {     
+    /*public void sort_dataset(String inputfile, String outputfile)throws IOException {
+            BufferedReader in = new BufferedReader(new FileReader(inputfile));
+            BufferedWriter out = new BufferedWriter(new FileWriter(outputfile));
+            String transaction;
+            String[] items;
+            while ((transaction = in.readLine()) != null) { 
+                String[] itemsets = transaction.split(itemsetDelimiter+" ");
+               // System.out.println("before: "+transaction);
+                transaction = "";
+                for (int i = 0; i < itemsets.length-1; i++){
+                        items = itemsets[i].split(itemSeparator);
+                        int[] numbers = new int[items.length]; 
+                        int kk = 0;
+                        for (String s:items)  numbers[kk++] = Integer.parseInt(s);           
+                        Arrays.sort(numbers);
+                        itemsets[i] = "";
+                        for (int j = 0; j < numbers.length; j++)  itemsets[i] = itemsets[i].concat(numbers[j]+" ");  
+                        itemsets[i] = itemsets[i].concat("-1 ");
+                        transaction = transaction.concat(itemsets[i]);
+                    }
+                    transaction = transaction.concat("-2\n");
+                   // System.out.println("after: "+transaction);
+                    out.write(transaction);
+                }
+                in.close();
+                out.close();
+    }*/
+    /* Each state of the wNFA has a  double integer code (start & end) used for descendence (reachability) check */
+    public void encode (int s) {  
         State ss = NFA.State(s);
         int item = ss.getItem();
         if (item != itemsetDelimiter) ((itemState)ss).setDelim((itemStates.get(itemsetDelimiter) == null)?0:itemStates.get(itemsetDelimiter).size()); 
@@ -302,7 +329,8 @@ public class WASMA {
         STATE_EXISTENCE_CHECK = Boolean.parseBoolean(args[4]);      // subset construction using or not state existence check
         long beforeUsedMem = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
         long startTime = System.nanoTime();
-        spm.loadData(args[1]);  
+        String in = args[1];
+        spm.loadData(in);  
         if (STATE_EXISTENCE_CHECK) {
             System.out.println("with state test");
             spm.Determinize_with_State_Existence_Check();
