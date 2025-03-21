@@ -28,33 +28,6 @@ public class WASMA {
         min_supp = ms;
         Queue = new Stack<PNode>();
     }
-    /*public void sort_dataset(String inputfile, String outputfile)throws IOException {
-            BufferedReader in = new BufferedReader(new FileReader(inputfile));
-            BufferedWriter out = new BufferedWriter(new FileWriter(outputfile));
-            String transaction;
-            String[] items;
-            while ((transaction = in.readLine()) != null) { 
-                String[] itemsets = transaction.split(itemsetDelimiter+" ");
-               // System.out.println("before: "+transaction);
-                transaction = "";
-                for (int i = 0; i < itemsets.length-1; i++){
-                        items = itemsets[i].split(itemSeparator);
-                        int[] numbers = new int[items.length]; 
-                        int kk = 0;
-                        for (String s:items)  numbers[kk++] = Integer.parseInt(s);           
-                        Arrays.sort(numbers);
-                        itemsets[i] = "";
-                        for (int j = 0; j < numbers.length; j++)  itemsets[i] = itemsets[i].concat(numbers[j]+" ");  
-                        itemsets[i] = itemsets[i].concat("-1 ");
-                        transaction = transaction.concat(itemsets[i]);
-                    }
-                    transaction = transaction.concat("-2\n");
-                   // System.out.println("after: "+transaction);
-                    out.write(transaction);
-                }
-                in.close();
-                out.close();
-    }*/
     /* Each state of the wNFA has a  double integer code (start & end) used for descendence (reachability) check */
     public void encode (int s) {  
         State ss = NFA.State(s);
@@ -95,7 +68,7 @@ public class WASMA {
     }
 
 
-    public long NbAnti_chains() {  // computation of the set of antichains of the dataset
+    public long NbAnti_chains() {  // Estimation of the set of antichains of the dataset
         long r = 0,nb = 1;
         int  j, t;
         State s;
@@ -177,7 +150,7 @@ public class WASMA {
                         members.clear();
                         break;
                     case itemsetDelimiter : 
-                    sequenceItemList.add(new BitSet());
+                        sequenceItemList.add(new BitSet());
                         if (NFA.getTransitions(p).containsKey(item)) q = NFA.getTransitions(p).get(item);
                         else {
                             NFA.newState(q = NFA.newTransition(p,item), new delimState());
@@ -251,7 +224,7 @@ public class WASMA {
             //writer.write("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates+"\n");
             System.out.println("Database: " + inputfile + "; Alphabet size: " + Alphabet.size() + "; Database size: " + NbTransactions);
            // System.out.println("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates);
-            WASMA.NFA = null; WASMA.Order = null; Alphabet = null; fItems = null; members = null;// we don't need the NFA all the required information are in the itemstate map            
+           // WASMA.NFA = null; WASMA.Order = null; Alphabet = null; fItems = null; members = null;// we don't need the NFA all the required information are in the itemstate map            
     }
 
     public void Determinize_without_State_Existence_Check() throws IOException {
