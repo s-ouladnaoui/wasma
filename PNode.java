@@ -17,12 +17,13 @@ public class PNode extends DfaState <ArrayList<Integer>> {
                 T res =  (T) new PNode();
                 if (resultat.get(item) == null) resultat.put(item, res);
                 else res = resultat.get(item);
+                int vector_size = WASMA.itemStates.get(item).size();
                 r = (itemState) WASMA.itemStates.get(item).get(((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getOrder())).map.get(item));
                 while (r.getEnd() <= p.getEnd()) {
                     ((PNode)res).states.add(r);
                     ((PNode)res).setSupport(((itemState) r).getWeight());
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i);
                     else break;
                 }
             }
@@ -46,9 +47,10 @@ public class PNode extends DfaState <ArrayList<Integer>> {
                 if (((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= index.get(item))
                     i = ((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
                 r = (itemState) WASMA.itemStates.get(item).get(i);
+                int vector_size = WASMA.itemStates.get(item).size();
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;
@@ -61,7 +63,7 @@ public class PNode extends DfaState <ArrayList<Integer>> {
                         ((PNode) res).setSupport(((itemState) r).getWeight());
                         i = r.getlEnd() + 1;
                     } else  i++;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i); else break;
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i); else break;
                 } 
                 resultat.put(item, (T)res);
             }
@@ -75,10 +77,11 @@ public class PNode extends DfaState <ArrayList<Integer>> {
         int i; State r;
         for(State s:this.getStates()) {
             r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(((itemState)s).getDelim());
+            int vector_size = WASMA.itemStates.get(WASMA.itemsetDelimiter).size();
             while (r.getEnd() <= s.getEnd()) {
                 if (!((delimState)r).getFollow().isEmpty())  ((PNode)res).states.add(r);
                 i = r.getlEnd() + 1;
-                if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
+                if (i < vector_size) r = WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
                 else break;
             }  
         }

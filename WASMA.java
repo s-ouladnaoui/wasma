@@ -191,10 +191,11 @@ public class WASMA {
                 for(int it=fItems.nextSetBit(0);it >= 0; it = fItems.nextSetBit(it+1) ) {
                     res = new Node(it); //  res is a new dfa state 
                     itemState r = (itemState) WASMA.itemStates.get(it).get(((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(NFA.State(NFAStartState).getOrder())).map.get(it));
+                    int vector_size = WASMA.itemStates.get(it).size();
                     while (r.getEnd() <= NFA.State(NFAStartState).getEnd()) {
                         res.states.add(r);
                         index = r.getlEnd() + 1;
-                        if (index < WASMA.itemStates.get(it).size()) r = (itemState) WASMA.itemStates.get(it).get(index);
+                        if (index < vector_size) r = (itemState) WASMA.itemStates.get(it).get(index);
                         else break;
                     }
                     res.setSupport(Alphabet.get(it));
@@ -222,7 +223,7 @@ public class WASMA {
            // long endTime = System.nanoTime();
            // writer.write("Database: " + inputfile + "; Alphabet size: " + alphabet.size() + "; Database size: " + NbTransactions + "\n");     
             //writer.write("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates+"\n");
-            System.out.println("Database: " + inputfile + "; Alphabet size: " + Alphabet.size() + "; Database size: " + NbTransactions);
+            System.out.println("Database: " + inputfile + "; Alphabet size: " + Alphabet.size() + "; Database size: " + NbTransactions+"; # NFA States: "+NFA.getNbStates());
            // System.out.println("Preprocessing time: " + (endTime-startTime)/1000000 + " ms\nNFA States: "+NFA.NbStates);
            // WASMA.NFA = null; WASMA.Order = null; Alphabet = null; fItems = null; members = null;// we don't need the NFA all the required information are in the itemstate map            
     }
@@ -312,12 +313,14 @@ public class WASMA {
             String mem = String.format("%.2f mb",(afterUsedMem-beforeUsedMem)/1024d/1024d);
             System.out.println("Mining finished...printing in progress !! please wait for the output");
             writer.write("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\n"+
-                "DFA States: "+DFA.NbStates+"\n" );
+                "DFA States: "+DFA.NbStates);
             System.out.println("Min Supp: "  + min_supp + " (relative : "+String.format("%.3f",( (double) min_supp/NbTransactions))+")\n"+
-                "DFA States: "+DFA.NbStates);                
+                "DFA States: "+DFA.NbStates);  
+            writer.write("Mining time: " + endTime +"\nMemory requirement: " + mem+"\n");
+            System.out.println("Mining time: " + endTime +"\nMemory requirement: " + mem);                              
             DFA.Print(DFAStartState,writer,PRINT_PATTERNS);
-            writer.write("Nb Frequent Sequences: " + nbFreqSequences + "\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
-            System.out.println("Nb Frequent Sequences: "+nbFreqSequences+"\nMining time: " + endTime +"\nMemory requirement: " + mem+"\n");
+            writer.write("Nb Frequent Sequences: " + nbFreqSequences+"\n");
+            System.out.println("Nb Frequent Sequences: "+nbFreqSequences+"\n");
         } else {
             System.out.println("Sans state test");
             spm.Determinize_without_State_Existence_Check();

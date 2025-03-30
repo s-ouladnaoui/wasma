@@ -5,12 +5,11 @@ import java.util.HashMap;
 public class Node extends DfaState <BitSet> {
     
     int ref;   // reference state to optimize Delta computation
-
     public Node(int i) {
         Pattern  = new BitSet(); 
         Pattern.set(i);     // at each itemset separator (start a new itemset) we initialize the current motif  
     }
-    public Node() {  Pattern  = new BitSet();  }
+    public Node() { Pattern  = new BitSet(); }
 
     public int getRef() { return ref;}
 
@@ -28,11 +27,12 @@ public class Node extends DfaState <BitSet> {
                 if (resultat.get(item) == null) resultat.put(item, res);
                 else res = resultat.get(item);
                 r = (itemState) WASMA.itemStates.get(item).get(((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getOrder())).map.get(item));
+                int vector_size = WASMA.itemStates.get(item).size();
                 while (r.getEnd() <= p.getEnd()) {
                     ((Node)res).states.add(r);
                     ((Node)res).setSupport(((itemState) r).getWeight());
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i);
                     else break;
                 }
             }
@@ -56,22 +56,23 @@ public class Node extends DfaState <BitSet> {
                 if (((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item) >= index.get(item))
                     i = ((delimState)WASMA.itemStates.get(WASMA.itemsetDelimiter).get(p.getRoot())).map.get(item);
                 r = (itemState) WASMA.itemStates.get(item).get(i);
+                int vector_size = WASMA.itemStates.get(item).size();
                 while (r.getStart() < p.getStart()) {
                     i = r.getlEnd() + 1;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i);
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i);
                 }
                 while (r.getEnd() <= p.getEnd()) {
                     if (r.getRoot() == p.getRoot()) found = true;
                     else {
                         found = true;
-                        for (m = this.getPattern().previousSetBit(this.getPattern().size()); found && m >= 0; found = r.getFollow().get(m), m = this.getPattern().previousSetBit(m - 1));
+                        for (m = this.getItem(); found && m >= 0; found = r.getFollow().get(m), m = this.getPattern().previousSetBit(m - 1));
                     } 
                     if (found) {
                         ((Node) res).states.add(r);
                         ((Node) res).setSupport(((itemState) r).getWeight());
                         i = r.getlEnd() + 1;
                     } else  i++;
-                    if (i < WASMA.itemStates.get(item).size()) r = (itemState) WASMA.itemStates.get(item).get(i); else break;
+                    if (i < vector_size) r = (itemState) WASMA.itemStates.get(item).get(i); else break;
                 } 
             }
         }
@@ -84,10 +85,11 @@ public class Node extends DfaState <BitSet> {
         int i; delimState r;
         for(State s:this.getStates()) {
             r = (delimState) WASMA.itemStates.get(WASMA.itemsetDelimiter).get(((itemState)s).getDelim());
+            int vector_size = WASMA.itemStates.get(WASMA.itemsetDelimiter).size();
             while (r.getEnd() <= s.getEnd()) {
                 if (!r.getFollow().isEmpty())    ((Node)res).states.add(r);
                 i = r.getlEnd() + 1;
-                if (i < WASMA.itemStates.get(WASMA.itemsetDelimiter).size()) r = (delimState) WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
+                if (i < vector_size) r = (delimState) WASMA.itemStates.get(WASMA.itemsetDelimiter).get(i);
                 else break;
             }  
         }

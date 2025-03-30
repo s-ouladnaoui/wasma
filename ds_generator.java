@@ -29,7 +29,7 @@ public static void main(String[] args) throws IOException  {
                 itemset = new ArrayList<Integer>();
                 int ims = (itemset_max_size > 0)? rand2.nextInt(itemset_max_size)+1:-1 * itemset_max_size;  
                 while (k < ims) {
-                    int r = rand3.nextInt(alphabet_size);
+                    int r = rand3.nextInt(alphabet_size)+1;
                     if (!itemset.contains(r)) {
                         itemset.add(r);
                         k++;

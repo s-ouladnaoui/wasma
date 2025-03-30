@@ -15,6 +15,8 @@ public class Automaton<T> {
 
     public T State(int i) { return stateMap.get(i);}
 
+    public int getNbStates() { return NbStates;}
+    
     public HashMap<Integer,Integer> getTransitions(int state) {
         return adjList.get(state);
     }
