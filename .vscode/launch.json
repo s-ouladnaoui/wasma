@@ -1,0 +1,17 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch WAutomaton",
+            "request": "launch",
+            "mainClass": "WASMA",
+            "projectName": "",
+            "vmArgs": "-Xms10g -Xmx14g",
+            "args": "1000 ds_100_10_10_10k r false true"
+        }
+    ]
+}
