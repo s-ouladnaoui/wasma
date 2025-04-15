@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Collections;
 /*
 
-This module is a random generator of sequential dataset folowwing the spmf format.
+This module is a random generator of sequential datasets folowing the spmf format.
 It admits five parameters:
     1. The alphabet size (a) or the number (positive integer) of items used in the generation
     2. The max length for itemsets (i): if positive we generate itemsets where the length is between 1 and i
