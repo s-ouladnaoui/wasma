@@ -4,6 +4,30 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Collections;
+/*
+
+This module is a random generator of sequential dataset folowwing the spmf format.
+It admits five parameters:
+    1. The alphabet size (a) or the number (positive integer) of items used in the generation
+    2. The max length for itemsets (i): if positive we generate itemsets where the length is between 1 and i
+                                        otherwise the length is fixed to i   
+    3. The max size for a sequence in terms of the number of itemsets composing the sequence:   
+                                        if positive we generate sequences where the size is is between 1 and s
+                                        otherwise the sequence size is fixed to s  
+    4. The size of the dataset: represent the number of transations (rows) of the generated dataset
+    5. The name of the output file 
+    Example
+    java ds_generator 100 4 10 1000 ds1k => generates a random sequence dataset:
+                                            over 100 items 
+                                            where the itemset length belongs randomly to [1,4]
+                                            the number of itemsets per transaction randomly peeked from [1,10]
+                                            containing 1k transaction called ds1k
+    java ds_generator 1000 -2 -8 10000 ds10k => generates a random sequence dataset:
+                                            over 1000 items 
+                                            where the itemset length is exactly 2 for the entire dataset
+                                            the number of itemsets per transaction is fixed to 8
+                                            containing 10k transaction called ds10k
+    */
 
 public class ds_generator {
 public static void main(String[] args) throws IOException  {

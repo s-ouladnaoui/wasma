@@ -1,4 +1,11 @@
 #! /bin/bash
+
+# This script is used to record both time and space of the studied algorithms in the experiment:
+# Note that due to debt in the behavior of PrefixSpan and Lapin algorithm the result can be biased for these two implementations
+# Since the spmf library includes another version for prefixspan we experiment here with PrefixSpan_AGP
+# the present version take the time and space requirement from the output of each algorithm
+# usage bash Experiment_Source_Time path time_out nbr_of_repetition
+
 path=$1
 limit=$2
 repeat=$3
