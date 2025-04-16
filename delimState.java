@@ -12,7 +12,7 @@ public class delimState extends State {
     
     public int getItem() { return WASMA.itemsetDelimiter; }  // the item is implicit #
     
-    public boolean getType() { return true; }   /* flag: the state is an itemset delimiter when is true*/
+    public boolean getType() { return true; }   /* flag: True means the state is an itemset delimiter */
 
     public Set<Integer> getFollow() { return map.keySet();}
 

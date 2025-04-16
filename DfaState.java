@@ -1,5 +1,5 @@
 import java.util.*;
-// one state of the wDFA  add the support and a parametrized Pattern (for the 2 versions of the subset construction: with or without stat existence test)
+// One state of the weighted DFA  add the support and a parametrized Pattern (for the 2 versions of the subset construction: with or without stat existence test)
 public abstract class DfaState <P> extends DState {
     
     P Pattern;     

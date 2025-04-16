@@ -16,7 +16,7 @@ public class itemState extends State {
     
     public int getItem() { return item;}
     
-    public boolean getType() { return false;}       /* flag: the state is an itemset delimiter when is true otherwise is an itemstate*/
+    public boolean getType() { return false;}       /* flag: True: the state is an itemset-delimiter, otherwise it is an itemstate*/
     
     public int getDelim() { return delimiter;}
 
