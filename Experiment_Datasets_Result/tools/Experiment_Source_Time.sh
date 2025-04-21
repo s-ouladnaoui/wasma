@@ -13,6 +13,7 @@ LC_NUMERIC="en_US.UTF-8"
 for ds in $path/*
 do																											
 	echo  "		$ds"
+	echo "			Time(s)		Mem(Mb)		#Patterns"
 	size=$(wc -l < $ds)
 	for ms in {2,4,8,10,20,50,100,500,1000}
 	do
@@ -24,7 +25,7 @@ do
 	do
 		if [[ $prg = "WASMA" ]] 
 		then
-			echo  "			WASMA-wsc =========="
+			echo  "			WASMA-wsc ==============================="
 			for i in `seq 1 $repeat`
 			do
 				timeout $limit java  $prg $ms_abs $ds r  false true > res1
@@ -35,11 +36,12 @@ do
 					break
 				else 
 					echo -ne "			$(cat res1 | awk '/time/  {printf("%0.2f", $3/1000)}')"
-					echo "		$(cat res1 | awk  '/mory/ {print $3}')"
+					echo -ne "		$(cat res1 | awk  '/mory/ {print $3}')"
+					echo "		$(cat res1 | awk '/Frequent/ {printf($4)}')"
 					rm -f r
 				fi
 			done
-			echo  "			WASMA-ssc =========="
+			echo  "			WASMA-ssc ==============================="
 			for i in `seq 1 $repeat`
 			do
 				timeout $limit java  $prg $ms_abs $ds r  false false > res2
@@ -50,12 +52,13 @@ do
 					break
 				else
 					echo -ne "			$(cat res2 | awk '/time/ {printf("%.2f", $3/1000)}')"
-					echo "		$(cat res2 | awk  '/mory/ {print $3}')"
+					echo -ne "		$(cat res2 | awk  '/mory/ {print $3}')"
+					echo "		$(cat res2 | awk '/Frequent/ {printf($4)}')"
 					rm -f r
 				fi
 			done
 		else
-			echo  "			$prg =========="
+			echo  "			$prg ==============================="
 			for i in `seq 1 $repeat`
 			do
 				if [ $prg = "Fast" ]
@@ -66,8 +69,6 @@ do
 					then 
 						echo "			Error: $rv"
 						break
-					else 
-						echo -ne "			$(cat res3 | awk '/time/ {printf("%.2f", $3/1000)}')"
 					fi	
 				else 
 					start_time=$(date +%s.%N)	
@@ -78,12 +79,12 @@ do
 					then 
 						echo "			Error: $rv"
 						break	
-					else	
-					echo -ne "			$(cat res3 | awk '/time/ {printf("%.2f", $4/1000)}')"
 					fi
 				fi		
-					mem=`printf	"%.2f"	$(cat res3 | awk '/mory/ {print $5}')`
-					echo "		$mem"
+					echo -ne "			$(cat res3 | awk '/time/ {printf("%.2f", $5/1000)}')"
+					mem=`printf	"%.2f"	$(cat res3 | awk '/mory/ {print $6}')`
+					echo -ne "		$mem"
+					echo "		$(cat res3 | awk '/Frequent/ {printf($5)}')"
 					rm -f r
 			done
 		fi
